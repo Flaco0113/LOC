@@ -1,0 +1,4 @@
+project_id = "nvvjzzsmpuebyenbxuvo"
+
+[functions.draft-clock]
+verify_jwt = true
