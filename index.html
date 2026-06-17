@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>League of Champions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#home" data-route="public">
+        <span class="brand-mark">LOC</span>
+        <span>League of Champions</span>
+      </a>
+
+      <nav class="public-nav" aria-label="Public navigation">
+        <a href="#home">Home</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#public-scoring">Scoring</a>
+        <button class="link-button" type="button" data-auth-open="login">Login</button>
+        <button class="button small primary" type="button" data-auth-open="signup">Sign Up</button>
+      </nav>
+
+      <nav class="app-nav is-hidden" aria-label="User navigation">
+        <button class="link-button active" type="button" data-view="dashboard">Dashboard</button>
+        <button class="link-button" type="button" data-view="leagues">My Leagues</button>
+        <button class="link-button" type="button" data-view="invitations">Invitations</button>
+        <button class="link-button" type="button" data-view="profile">Profile</button>
+        <button class="button small secondary" type="button" id="logoutButton">Logout</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="public-site" id="publicSite">
+        <section class="hero" id="home">
+          <img src="assets/loc-hero.png" alt="A modern fantasy sports draft room with a digital draft board and championship bracket.">
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <p class="eyebrow">Compete all year. Champion every season.</p>
+            <h1>Draft. Compete. Become a Champion.</h1>
+            <p class="lede">League of Champions turns multi-sport fantasy, draft strategy, and championship prediction into one premium year-round competition.</p>
+            <div class="hero-actions">
+              <button class="button primary" type="button" data-auth-open="signup">Create League</button>
+              <a class="button secondary" href="#how-it-works">Learn More</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section compact-section" id="how-it-works">
+          <div class="section-heading">
+            <p class="eyebrow">How LOC works</p>
+            <h2>Fantasy sports for entire teams</h2>
+            <p>LOC blends draft strategy, postseason prediction, league rivalries, and commissioner controls into one cross-sport competition.</p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="panel">
+              <span class="step-number">1</span>
+              <h3>Create or join a league</h3>
+              <p>Commissioners set the season, sports, participant count, draft date, and invitations.</p>
+            </article>
+            <article class="panel">
+              <span class="step-number">2</span>
+              <h3>Draft one team per sport</h3>
+              <p>Managers use a snake draft to select eligible teams across NBA, NFL, MLB, NHL, NCAA, UEFA, NASCAR, and golf.</p>
+            </article>
+            <article class="panel">
+              <span class="step-number">3</span>
+              <h3>Track postseason results</h3>
+              <p>Standings update as drafted teams advance, lose, win titles, or earn runner-up bonuses.</p>
+            </article>
+            <article class="panel">
+              <span class="step-number">4</span>
+              <h3>Crown the LOC champion</h3>
+              <p>Final rankings total every drafted team across every selected sport.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section muted-section">
+          <div class="split-showcase">
+            <div>
+              <p class="eyebrow">Platform benefits</p>
+              <h2>Built like a real fantasy hub</h2>
+              <p class="section-copy">Users get personal dashboards, league cards, invitations, draft results, team pages, live standings, scoring tabs, and activity feeds. Commissioners get the admin controls they need to keep a league fair and organized.</p>
+            </div>
+            <div class="benefit-list">
+              <div><strong>Role-based access</strong><span>League content stays behind account verification.</span></div>
+              <div><strong>Real-time ready</strong><span>Draft room and standings surfaces are structured for live updates.</span></div>
+              <div><strong>Audit-friendly</strong><span>Draft changes, score overrides, and settings updates are logged.</span></div>
+              <div><strong>Future-proof sports</strong><span>The universal scoring engine supports new leagues without new rules.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="public-scoring">
+          <div class="section-heading">
+            <p class="eyebrow">Scoring system</p>
+            <h2>One scoring language for every sport</h2>
+            <p>Placement points run from 9 points for first place to 1 point for ninth. Champions earn +3, runners-up earn +1.</p>
+          </div>
+          <div class="score-preview-grid" id="publicScoreGrid"></div>
+        </section>
+
+        <section class="section muted-section">
+          <div class="section-heading">
+            <p class="eyebrow">League examples</p>
+            <h2>Ways to play</h2>
+          </div>
+          <div class="example-grid">
+            <article class="panel league-example">
+              <h3>Founders Cup</h3>
+              <p>8 managers, 6 sports, private league, snake draft.</p>
+              <span>Draft scheduled</span>
+            </article>
+            <article class="panel league-example">
+              <h3>Postseason Kings</h3>
+              <p>10 managers, football-heavy setup, commissioner scoring review.</p>
+              <span>Season live</span>
+            </article>
+            <article class="panel league-example">
+              <h3>Global Trophy Room</h3>
+              <p>NBA, NHL, MLB, UEFA, NASCAR, and Masters prediction pool.</p>
+              <span>Invites open</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="section faq-section">
+          <div class="section-heading">
+            <p class="eyebrow">FAQ</p>
+            <h2>Common questions</h2>
+          </div>
+          <div class="faq-list">
+            <details open>
+              <summary>Do users draft players?</summary>
+              <p>No. LOC managers draft entire teams, then score based on postseason success.</p>
+            </details>
+            <details>
+              <summary>Can commissioners invite users?</summary>
+              <p>Yes. Private leagues support email invitations, pending invite tracking, and user management.</p>
+            </details>
+            <details>
+              <summary>How are ties handled?</summary>
+              <p>Tiebreakers use furthest advancement, elimination margin, elimination-round offense, and higher playoff seed.</p>
+            </details>
+            <details>
+              <summary>Is public league support available?</summary>
+              <p>Public leagues are marked as a future feature in this prototype.</p>
+            </details>
+          </div>
+        </section>
+      </section>
+
+      <section class="verification-gate is-hidden" id="verificationGate" aria-live="polite">
+        <div class="panel auth-card">
+          <p class="eyebrow">Email verification required</p>
+          <h2>Check your inbox</h2>
+          <p>An activation email was sent to <strong id="pendingEmail">your address</strong>. League dashboards stay locked until the email is verified.</p>
+          <div class="notice-row success">
+            <strong>Prototype action</strong>
+            <span>Use the button below to simulate clicking the verification email link.</span>
+          </div>
+          <div class="button-row">
+            <button class="button primary" type="button" id="verifyAccountButton">Verify Account</button>
+            <button class="button secondary" type="button" data-auth-open="login">Back to Login</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="app-shell is-hidden" id="appShell">
+        <aside class="sidebar">
+          <div class="profile-summary">
+            <span class="avatar" id="userInitials">AG</span>
+            <div>
+              <strong id="userName">Alex Grant</strong>
+              <span id="userHandle">@alexgrant</span>
+            </div>
+          </div>
+          <div class="sidebar-group">
+            <button class="sidebar-link active" type="button" data-view="dashboard">Dashboard</button>
+            <button class="sidebar-link" type="button" data-view="leagues">My Leagues</button>
+            <button class="sidebar-link" type="button" data-view="invitations">Invitations</button>
+            <button class="sidebar-link" type="button" data-view="create">Create League</button>
+            <button class="sidebar-link" type="button" data-view="profile">Profile</button>
+          </div>
+          <div class="system-card">
+            <span>Account</span>
+            <strong>Verified</strong>
+            <p>League access, invitations, and commissioner tools are enabled.</p>
+          </div>
+        </aside>
+
+        <section class="workspace">
+          <section class="app-view active" id="dashboardView">
+            <div class="workspace-heading">
+              <div>
+                <p class="eyebrow">User dashboard</p>
+                <h2>Command center</h2>
+                <p>Manage every league, invitation, draft, and roster from one place.</p>
+              </div>
+              <button class="button primary" type="button" data-view="create">Create League</button>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-card"><span>Active leagues</span><strong id="activeLeagueCount">3</strong></div>
+              <div class="metric-card"><span>Pending invites</span><strong id="inviteCount">2</strong></div>
+              <div class="metric-card"><span>Best ranking</span><strong>#1</strong></div>
+              <div class="metric-card"><span>Teams tracked</span><strong>18</strong></div>
+            </div>
+
+            <div class="dashboard-grid">
+              <section class="panel">
+                <div class="panel-heading row-heading">
+                  <div>
+                    <p class="eyebrow">My leagues</p>
+                    <h3>Current competitions</h3>
+                  </div>
+                  <button class="link-button" type="button" data-view="leagues">View all</button>
+                </div>
+                <div class="league-card-list" id="dashboardLeagueCards"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-heading row-heading">
+                  <div>
+                    <p class="eyebrow">League invitations</p>
+                    <h3>Pending invites</h3>
+                  </div>
+                  <button class="link-button" type="button" data-view="invitations">Manage</button>
+                </div>
+                <div class="invite-list" id="dashboardInvites"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="app-view" id="leaguesView">
+            <div class="workspace-heading">
+              <div>
+                <p class="eyebrow">My leagues</p>
+                <h2>League portfolio</h2>
+                <p>Open a league hub, review draft results, or leave a league when allowed.</p>
+              </div>
+            </div>
+            <div class="league-grid" id="allLeagueCards"></div>
+          </section>
+
+          <section class="app-view" id="invitationsView">
+            <div class="workspace-heading">
+              <div>
+                <p class="eyebrow">Invitations</p>
+                <h2>Pending league invites</h2>
+                <p>Accept or decline league invitations from commissioners.</p>
+              </div>
+            </div>
+            <div class="invite-grid" id="inviteCards"></div>
+          </section>
+
+          <section class="app-view" id="createView">
+            <div class="workspace-heading">
+              <div>
+                <p class="eyebrow">Commissioner wizard</p>
+                <h2>Create a league</h2>
+                <p>The creator becomes league commissioner and can invite users, configure sports, and manage draft settings.</p>
+              </div>
+            </div>
+
+            <form class="panel wizard-form" id="leagueWizard">
+              <div class="wizard-section">
+                <span class="step-number">1</span>
+                <div>
+                  <h3>Basic information</h3>
+                  <div class="form-grid">
+                    <label><span>League Name</span><input id="newLeagueName" required value="Championship Syndicate"></label>
+                    <label><span>Season Year</span><input id="newLeagueYear" type="number" min="2026" value="2026"></label>
+                    <label class="wide-field"><span>League Description</span><textarea id="newLeagueDescription">Private multi-sport postseason league for friends and family.</textarea></label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wizard-section">
+                <span class="step-number">2</span>
+                <div>
+                  <h3>League structure</h3>
+                  <div class="form-grid">
+                    <label><span>Participants</span><input id="newLeagueParticipants" type="number" min="4" max="12" value="8"></label>
+                    <label><span>Visibility</span><select id="newLeagueVisibility"><option>Private League</option><option disabled>Public League (future feature)</option></select></label>
+                  </div>
+                  <fieldset>
+                    <legend>Sports Included</legend>
+                    <div class="sport-options" id="wizardSports"></div>
+                  </fieldset>
+                </div>
+              </div>
+
+              <div class="wizard-section">
+                <span class="step-number">3</span>
+                <div>
+                  <h3>Draft settings</h3>
+                  <div class="form-grid">
+                    <label><span>Draft Date</span><input id="newDraftDate" type="date" value="2026-09-03"></label>
+                    <label><span>Draft Time</span><input id="newDraftTime" type="time" value="20:00"></label>
+                    <label><span>Draft Type</span><select id="newDraftType"><option>Snake Draft</option></select></label>
+                    <label><span>Time Between Picks</span><select id="newPickTimer" required><option value="30">30 seconds</option><option value="60" selected>1 min</option><option value="90">1 min 30 seconds</option><option value="120">2 min</option></select></label>
+                    <label><span>Draft Order</span><select id="newDraftOrder"><option>Randomize 30 minutes before draft</option><option>Commissioner sets manually</option></select></label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wizard-section">
+                <span class="step-number">4</span>
+                <div>
+                  <h3>Invitations</h3>
+                  <label><span>Invite users by email</span><textarea id="newLeagueInvites" placeholder="friend@example.com, rival@example.com"></textarea></label>
+                  <div class="button-row">
+                    <button class="button primary" type="submit">Create League</button>
+                    <button class="button secondary" type="button" data-view="dashboard">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </section>
+
+          <section class="app-view" id="profileView">
+            <div class="workspace-heading">
+              <div>
+                <p class="eyebrow">Profile</p>
+                <h2>Account settings</h2>
+                <p>Review account details, time zone, verification status, and security requirements.</p>
+              </div>
+            </div>
+            <div class="panel profile-panel" id="profilePanel"></div>
+          </section>
+
+          <section class="app-view" id="leagueView">
+            <div class="league-header panel">
+              <div>
+                <p class="eyebrow">League homepage</p>
+                <h2 id="leagueTitle">Founders Cup</h2>
+                <p id="leagueMeta">2026 season - Commissioner Alex Grant</p>
+              </div>
+              <div class="status-pills">
+                <span id="leagueDraftStatus">Draft Scheduled</span>
+                <span id="leagueSeasonStatus">Preseason</span>
+                <button class="button small secondary" type="button" data-open-draft-room>Open Draft Room</button>
+              </div>
+            </div>
+
+            <div class="league-tabs" role="tablist" aria-label="League navigation">
+              <button class="active" type="button" data-league-tab="standings">Standings</button>
+              <button type="button" data-league-tab="rosters">Rosters</button>
+              <button type="button" data-league-tab="draft">Draft Results</button>
+              <button type="button" data-league-tab="teams">Teams</button>
+              <button type="button" data-league-tab="scoring">Scoring Rules</button>
+              <button type="button" data-league-tab="activity">Activity Feed</button>
+              <button class="commish-only" type="button" data-league-tab="commissioner">Commissioner</button>
+            </div>
+
+            <div class="league-tab-content active" id="standingsTab">
+              <section class="panel">
+                <div class="panel-heading">
+                  <p class="eyebrow">Live leaderboard</p>
+                  <h3>League standings</h3>
+                </div>
+                <div class="data-table standings-table" id="leagueStandings"></div>
+              </section>
+            </div>
+
+            <div class="league-tab-content" id="rostersTab">
+              <section class="panel">
+                <div class="panel-heading">
+                  <p class="eyebrow">Team rosters</p>
+                  <h3>Drafted teams by user</h3>
+                </div>
+                <div class="roster-list" id="rosterList"></div>
+              </section>
+            </div>
+
+            <div class="league-tab-content" id="draftTab">
+              <section class="panel">
+                <div class="panel-heading">
+                  <p class="eyebrow">Draft results</p>
+                  <h3>Full draft history</h3>
+                </div>
+                <div class="filter-bar">
+                  <label><span>Round</span><select id="roundFilter"></select></label>
+                  <label><span>Sport</span><select id="sportFilter"></select></label>
+                  <label><span>Search picks</span><input id="pickSearch" placeholder="Team or user"></label>
+                </div>
+                <div class="data-table" id="draftResults"></div>
+              </section>
+            </div>
+
+            <div class="league-tab-content" id="teamsTab">
+              <section class="panel">
+                <div class="panel-heading">
+                  <p class="eyebrow">Team detail pages</p>
+                  <h3>Tracked teams</h3>
+                </div>
+                <div class="team-detail-grid" id="teamGrid"></div>
+              </section>
+            </div>
+
+            <div class="league-tab-content" id="scoringTab">
+              <section class="panel scoring-panel">
+                <div class="panel-heading">
+                  <p class="eyebrow">Scoring rules</p>
+                  <h3>Placement, bonuses, and tiebreakers</h3>
+                </div>
+                <div class="rules-grid">
+                  <div>
+                    <h4>Placement Points</h4>
+                    <div class="score-preview-grid" id="leagueScoreGrid"></div>
+                  </div>
+                  <div>
+                    <h4>Bonus Points</h4>
+                    <div class="bonus-list">
+                      <div><span>Champion</span><strong>+3</strong></div>
+                      <div><span>Runner-Up</span><strong>+1</strong></div>
+                    </div>
+                    <h4>Universal Tiebreakers</h4>
+                    <ol class="rank-rules">
+                      <li>Furthest advancement</li>
+                      <li>Smallest elimination margin</li>
+                      <li>Most points, goals, or runs scored in elimination round</li>
+                      <li>Higher playoff seed</li>
+                    </ol>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div class="league-tab-content" id="activityTab">
+              <section class="panel">
+                <div class="panel-heading">
+                  <p class="eyebrow">Activity feed</p>
+                  <h3>League activity log</h3>
+                </div>
+                <div class="activity-list" id="activityList"></div>
+              </section>
+            </div>
+
+            <div class="league-tab-content" id="commissionerTab">
+              <section class="commissioner-grid">
+                <div class="panel">
+                  <div class="panel-heading">
+                    <p class="eyebrow">League management</p>
+                    <h3>Settings</h3>
+                  </div>
+                  <div class="admin-actions">
+                    <button type="button" data-admin-action="Edit League Name">Edit League Name</button>
+                    <button type="button" data-admin-action="Edit League Description">Edit Description</button>
+                    <button type="button" data-admin-action="Modify Draft Date">Modify Draft Date</button>
+                    <button type="button" data-admin-action="Invite Users">Invite Users</button>
+                    <button type="button" data-admin-action="Remove Users">Remove Users</button>
+                    <button type="button" data-admin-action="Transfer Commissioner Role">Transfer Commissioner</button>
+                    <button type="button" data-admin-action="Lock League">Lock League</button>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-heading">
+                    <p class="eyebrow">Draft management</p>
+                    <h3>Draft controls</h3>
+                  </div>
+                  <div class="admin-actions">
+                    <button type="button" data-admin-action="Start Draft">Start Draft</button>
+                    <button type="button" data-admin-action="Pause Draft">Pause Draft</button>
+                    <button type="button" data-admin-action="Resume Draft">Resume Draft</button>
+                    <button type="button" data-admin-action="Reset Draft">Reset Draft</button>
+                    <button type="button" data-admin-action="Assign Teams Manually">Assign Teams Manually</button>
+                    <button type="button" data-admin-action="Correct Draft Errors">Correct Draft Errors</button>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-heading">
+                    <p class="eyebrow">Scoring administration</p>
+                    <h3>Score controls</h3>
+                  </div>
+                  <div class="admin-actions">
+                    <button type="button" data-admin-action="Recalculate Scores">Recalculate Scores</button>
+                    <button type="button" data-admin-action="Override Scores">Override Scores</button>
+                    <button type="button" data-admin-action="Correct Team Assignments">Correct Team Assignments</button>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-heading">
+                    <p class="eyebrow">Audit history</p>
+                    <h3>Administrative log</h3>
+                  </div>
+                  <div class="activity-list" id="auditList"></div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section class="draft-room is-hidden" id="draftRoom" aria-live="polite">
+        <div class="draft-room-shell">
+          <header class="draft-room-header">
+            <button class="button small secondary" type="button" id="exitDraftRoom">Back to League</button>
+            <div>
+              <p class="eyebrow" id="draftRoomMeta">Snake draft</p>
+              <h2 id="draftRoomTitle">League Draft Room</h2>
+            </div>
+            <div class="draft-room-progress">
+              <span id="draftRoundStatus">Round 1</span>
+              <div class="progress-track"><span id="draftProgressBar"></span></div>
+              <strong id="draftProgressLabel">0% Complete</strong>
+            </div>
+            <button class="button primary" type="button" id="draftSelectedTop">Draft Team</button>
+          </header>
+
+          <div class="draft-top-row">
+            <section class="panel draft-clock-panel" id="draftClockPanel"></section>
+            <section class="draft-order-strip panel" id="draftOrderStrip" aria-label="Current round draft order"></section>
+          </div>
+
+          <div class="draft-board-row">
+            <section class="panel draft-mini-panel">
+              <div class="panel-heading">
+                <p class="eyebrow">Selected sports</p>
+                <h3>Draft slots</h3>
+              </div>
+              <div class="draft-sport-slots" id="draftSportSlots"></div>
+            </section>
+            <div class="draft-board-wrap panel">
+              <div class="draft-board" id="draftBoard"></div>
+            </div>
+          </div>
+
+          <div class="draft-action-grid">
+            <section class="panel draft-mini-panel draft-chat-panel">
+              <div class="panel-heading">
+                <p class="eyebrow">Draft chatter</p>
+                <h3>League chat</h3>
+              </div>
+              <div class="draft-chat" id="draftChat"></div>
+              <div class="draft-chat-form">
+                <input id="draftChatInput" placeholder="Message league...">
+                <button class="button secondary" type="button" id="sendDraftChat">Send</button>
+              </div>
+            </section>
+            <section class="panel draft-mini-panel">
+              <div class="panel-heading row-heading">
+                <div>
+                  <p class="eyebrow">My queue</p>
+                  <h3>Shortlist</h3>
+                </div>
+                <button class="link-button" type="button" id="draftQueuedTeam">Draft Top</button>
+              </div>
+              <div class="draft-queue" id="draftQueue"></div>
+            </section>
+            <section class="panel draft-team-detail" id="draftTeamDetail"></section>
+            <section class="panel draft-mini-panel">
+              <div class="panel-heading">
+                <p class="eyebrow">Available teams</p>
+                <h3>Draft pool</h3>
+              </div>
+              <label><span>Sport / league</span><select id="draftSportSelect"></select></label>
+              <label><span>Search teams</span><input id="draftTeamSearch" placeholder="Team, sport, region"></label>
+              <div class="draft-available-list" id="draftAvailableTeams"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-backdrop is-hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="auth-modal panel">
+        <button class="close-button" type="button" id="closeAuth" aria-label="Close">x</button>
+        <div class="auth-tabs">
+          <button class="active" type="button" data-auth-tab="login">Login</button>
+          <button type="button" data-auth-tab="signup">Create Account</button>
+          <button type="button" data-auth-tab="forgot">Forgot Password</button>
+        </div>
+
+        <form class="auth-form active" id="loginForm">
+          <h2 id="authTitle">Login</h2>
+          <label><span>Email Address</span><input id="loginEmail" type="email" required value="alex@loc.test"></label>
+          <label><span>Password</span><input id="loginPassword" type="password" required value="Password1"></label>
+          <label class="checkbox-row"><input id="rememberMe" type="checkbox"><span>Remember Me</span></label>
+          <div class="form-message" id="loginMessage"></div>
+          <button class="button primary" type="submit">Login</button>
+        </form>
+
+        <form class="auth-form" id="signupForm">
+          <h2>Create Account</h2>
+          <div class="form-grid">
+            <label><span>First Name</span><input id="signupFirst" required value="Morgan"></label>
+            <label><span>Last Name</span><input id="signupLast" required value="Rivera"></label>
+            <label><span>Username</span><input id="signupUsername" required value="mrivera"></label>
+            <label><span>Email Address</span><input id="signupEmail" type="email" required value="morgan@loc.test"></label>
+            <label><span>Password</span><input id="signupPassword" type="password" required value="Password1"></label>
+            <label><span>Time Zone</span><select id="signupTimeZone"></select></label>
+          </div>
+          <div class="requirements">
+            <span>Password must include at least 8 characters, uppercase, lowercase, and a number.</span>
+          </div>
+          <div class="form-message" id="signupMessage"></div>
+          <button class="button primary" type="submit">Create Account</button>
+        </form>
+
+        <form class="auth-form" id="forgotForm">
+          <h2>Password Reset</h2>
+          <label><span>Email Address</span><input id="resetEmail" type="email" required placeholder="you@example.com"></label>
+          <div class="form-message" id="resetMessage"></div>
+          <button class="button primary" type="submit">Send Reset Link</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-backdrop is-hidden" id="teamModal" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle">
+      <div class="team-modal panel">
+        <button class="close-button" type="button" id="closeTeamModal" aria-label="Close">x</button>
+        <div id="teamModalBody"></div>
+      </div>
+    </div>
+
+    <div class="toast is-hidden" id="toast" role="status" aria-live="polite"></div>
+
+    <footer>
+      <span>League of Champions</span>
+      <span>Prototype surfaces: authentication, dashboard, commissioner tools, league hub, scoring, and audit logs.</span>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
