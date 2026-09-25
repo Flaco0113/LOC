@@ -33,6 +33,14 @@ checks, not a claim that user research or an accessibility certification occurre
 
 ## Latest validation
 
+- September 24 follow-up: repeated invalid league submissions produce exactly
+  one associated field message; sport-group correction clears invalid state and
+  stale description references for all nine controls. Schedule errors preserve
+  the original hint alongside the error, then remove only the error reference
+  when edited. Checked in the actual local browser without creating a league.
+- Draft panels gain mobile tab roles/labels at 390px and remove them at 1440px
+  immediately on resize, without requiring a route change or server update.
+
 - `node --test tests/*.test.js`: 17 passing tests, including the enclosing suite.
 - JavaScript syntax checks pass for client and server.
 - Browser reviewed at 1440×900, 1024×768, 390×844, 320×780, and 844×390.
@@ -48,6 +56,10 @@ checks, not a claim that user research or an accessibility certification occurre
   Those deliberate failures produce expected network/422 diagnostics.
 
 ## External acceptance work
+
+**User decision, September 24, 2026:** defer real email and live sports data until
+the local enhancements have been reviewed. The follow-up scope and activation
+criteria are tracked in `FOLLOW-UP.md`; neither integration is activated.
 
 Actual inbox delivery requires the user's email service credentials and verified
 sender. A production database deployment and live sports data feed are not connected;

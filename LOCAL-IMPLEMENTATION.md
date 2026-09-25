@@ -11,6 +11,8 @@ precise turn-distance hints, setup checklists, initial skeletons, last-sync and
 retry feedback, consistent 44px queue controls, and aggregate outcome metrics.
 Optional email verification, resend/change-email, reset links, invitation delivery,
 and failed-delivery retries are implemented; see `EMAIL-SETUP.md` for activation.
+Real email and live sports data are explicitly deferred at the user's request;
+see `FOLLOW-UP.md`. They remain disconnected during local enhancement review.
 
 ## What to try
 
@@ -105,7 +107,8 @@ public release.
 - There is no live sports feed. Commissioners enter results; sample data and
   catalog ordering are explicitly illustrative. Equal totals share ranks; this
   edition does not invent elimination-margin data to break ties.
-- Existing Supabase files remain untouched and are not connected or deployed.
+- Existing Supabase files remain untouched and the local app is not connected to
+  the existing hosted schema. This enhancement pass does not deploy database changes.
   Production integration, live-data provider selection, notification delivery,
   user research, and analytics deployment require separate configuration/work.
 - Original frontend files remain in `qa/before-ux-update/`. Old localStorage

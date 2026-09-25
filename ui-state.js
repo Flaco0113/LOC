@@ -1,6 +1,58 @@
 // Only non-sensitive navigation preferences are stored here.
 export const filterDefaults = { poolSearch: '', poolSport: '', poolAll: false, pickSearch: '', pickSport: '', pickRound: '', sort: 'rank', sortAsc: true };
 
+// Error descriptions supplement hints and are removed independently on correction.
+export function clearFieldError(input) {
+  const errorId = input.dataset.validationError;
+  if (!errorId) return;
+  const form = input.form;
+  const peers = [...form.elements].filter(control => control.dataset?.validationError === errorId);
+  for (const control of peers) {
+    control.removeAttribute('aria-invalid');
+    const remaining = (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== errorId);
+    if (remaining.length) control.setAttribute('aria-describedby', remaining.join(' '));
+    else control.removeAttribute('aria-describedby');
+    delete control.dataset.validationError;
+  }
+  form.querySelectorAll('[data-validation-message]').forEach(message => {
+    if (message.id === errorId) message.remove();
+  });
+}
+
+export function setFieldError(form, name, message) {
+  const controls = [...form.elements].filter(control => control.name === name && control.type !== 'hidden');
+  if (!controls.length) return false;
+  controls.forEach(clearFieldError);
+  const first = controls[0];
+  const error = document.createElement('small');
+  error.id = `${form.dataset.form || 'form'}-${name}-error`;
+  error.className = 'field-error';
+  error.dataset.validationMessage = '';
+  error.textContent = message;
+  (first.closest('fieldset') || first.parentElement).append(error);
+  for (const control of controls) {
+    control.dataset.validationError = error.id;
+    control.setAttribute('aria-invalid', 'true');
+    const descriptions = new Set((control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+    descriptions.add(error.id);
+    control.setAttribute('aria-describedby', [...descriptions].join(' '));
+  }
+  first.focus();
+  return true;
+}
+
+export function syncDraftPanelSemantics(root, mobile) {
+  root.querySelectorAll('[id^=draft-panel-]').forEach(panel => {
+    if (mobile) {
+      panel.setAttribute('role', 'tabpanel');
+      panel.setAttribute('aria-labelledby', panel.id.replace('panel', 'tab'));
+    } else {
+      panel.removeAttribute('role');
+      panel.removeAttribute('aria-labelledby');
+    }
+  });
+}
+
 export function picksUntilTurn(league, userId) {
   const count = league.members.length;
   for (let pick = league.picks.length; pick < count * league.sports.length; pick++) {
