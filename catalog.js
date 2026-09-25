@@ -1,0 +1,11 @@
+export const catalog = {
+  NBA: ["Boston Celtics", "Denver Nuggets", "New York Knicks", "Dallas Mavericks", "Minnesota Timberwolves", "Oklahoma City Thunder", "Milwaukee Bucks", "Phoenix Suns", "Miami Heat", "Los Angeles Lakers", "Golden State Warriors", "Cleveland Cavaliers"],
+  NFL: ["Kansas City Chiefs", "Buffalo Bills", "Baltimore Ravens", "Detroit Lions", "Philadelphia Eagles", "San Francisco 49ers", "Cincinnati Bengals", "Houston Texans", "Green Bay Packers", "Dallas Cowboys", "Miami Dolphins", "Los Angeles Chargers"],
+  MLB: ["Los Angeles Dodgers", "New York Yankees", "Atlanta Braves", "Houston Astros", "Philadelphia Phillies", "Baltimore Orioles", "Texas Rangers", "Seattle Mariners", "San Diego Padres", "Boston Red Sox", "Chicago Cubs", "Arizona Diamondbacks"],
+  NHL: ["Edmonton Oilers", "Florida Panthers", "New York Rangers", "Colorado Avalanche", "Dallas Stars", "Toronto Maple Leafs", "Vegas Golden Knights", "Carolina Hurricanes", "Boston Bruins", "Vancouver Canucks", "Tampa Bay Lightning", "Winnipeg Jets"],
+  "NCAA Football": ["Georgia Bulldogs", "Ohio State Buckeyes", "Texas Longhorns", "Oregon Ducks", "Alabama Crimson Tide", "Michigan Wolverines", "Notre Dame Fighting Irish", "LSU Tigers", "Penn State Nittany Lions", "Tennessee Volunteers", "Clemson Tigers", "Florida State Seminoles"],
+  "NCAA Basketball": ["Duke Blue Devils", "UConn Huskies", "Kansas Jayhawks", "North Carolina Tar Heels", "Houston Cougars", "Kentucky Wildcats", "Arizona Wildcats", "Purdue Boilermakers", "Gonzaga Bulldogs", "Baylor Bears", "Michigan State Spartans", "Villanova Wildcats"],
+  "UEFA Champions League": ["Real Madrid", "Manchester City", "Bayern Munich", "Paris Saint-Germain", "Barcelona", "Liverpool", "Arsenal", "Inter Milan", "Atletico Madrid", "Borussia Dortmund", "Juventus", "Benfica"],
+  NASCAR: ["Hendrick Motorsports", "Team Penske", "Joe Gibbs Racing", "Trackhouse Racing", "23XI Racing", "Richard Childress Racing", "RFK Racing", "Legacy Motor Club", "Front Row Motorsports", "Wood Brothers Racing", "Kaulig Racing", "Spire Motorsports"],
+  "Masters Tournament": ["Scottie Scheffler", "Rory McIlroy", "Jon Rahm", "Xander Schauffele", "Collin Morikawa", "Ludvig Aberg", "Viktor Hovland", "Jordan Spieth", "Hideki Matsuyama", "Patrick Cantlay", "Max Homa", "Tommy Fleetwood"]
+};
