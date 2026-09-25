@@ -1,6 +1,51 @@
 // Only non-sensitive navigation preferences are stored here.
 export const filterDefaults = { poolSearch: '', poolSport: '', poolAll: false, pickSearch: '', pickSport: '', pickRound: '', sort: 'rank', sortAsc: true };
 
+// Month-end planning allowances, not actual fixture dates. Deliberately stable:
+// opening the app next year must not silently move an existing league's season.
+export const championshipMonths = { NBA: 6, NFL: 2, MLB: 11, NHL: 6,
+  'NCAA Football': 1, 'NCAA Basketball': 4, 'UEFA Champions League': 6,
+  NASCAR: 11, 'Masters Tournament': 4 };
+
+export function leagueTimeframe(league) {
+  const seasonStart = Date.UTC(Number(league.season), 0, 1);
+  const created = league.createdAt || league.activity?.find(event => event.text === 'Created the league.')?.at || seasonStart;
+  const draftStart = league.draftStartedAt || league.picks?.[0]?.at || league.scheduled;
+  const start = draftStart || Math.max(created, seasonStart);
+  const year = new Date(start).getUTCFullYear();
+  const events = league.sports.map(sport => {
+    const month = championshipMonths[sport];
+    let end = Date.UTC(year, month, 0, 23, 59, 59, 999);
+    if (end < start) end = Date.UTC(year + 1, month, 0, 23, 59, 59, 999);
+    return { sport, end };
+  });
+  const end = Math.max(...events.map(event => event.end));
+  return { start, startKnown: !!draftStart, end, events,
+    lastSports: events.filter(event => event.end === end).map(event => event.sport) };
+}
+
+export function overrideTeams(league, search = '', sport = '') {
+  const drafted = new Set(league.picks.map(pick => pick.team.id));
+  const filled = new Set(league.picks.filter(pick => pick.userId === league.current?.id).map(pick => pick.team.sport));
+  const query = search.trim().toLocaleLowerCase();
+  return league.teams.filter(team => !drafted.has(team.id) && (!sport || team.sport === sport) &&
+    `${team.name} ${team.sport}`.toLocaleLowerCase().includes(query))
+    .map(team => ({ ...team, unavailableReason: filled.has(team.sport) ? 'Manager already has a team in this sport' : '' }));
+}
+
+export function scoreExplanation(pick) {
+  if (pick.override != null) return `The commissioner set this score to ${pick.override} points. See Activity for the reason and previous score.`;
+  if (!pick.finish) return 'The result has not been recorded yet. No points have been awarded.';
+  const placement = Math.max(0, 10 - pick.finish);
+  if (pick.finish === 1) return `Won the championship, earning ${placement} points for first place plus a 3-point champion bonus — 12 points in total.`;
+  if (pick.finish === 2) {
+    const final = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAA Football', 'NCAA Basketball', 'UEFA Champions League'].includes(pick.team.sport);
+    return `${final ? 'Reached the final and finished runner-up' : 'Finished runner-up'}, earning ${placement} points for second place plus a 1-point runner-up bonus — 9 points in total.`;
+  }
+  const suffix = pick.finish % 100 >= 11 && pick.finish % 100 <= 13 ? 'th' : ({1:'st',2:'nd',3:'rd'}[pick.finish % 10] || 'th');
+  return `Finished in ${pick.finish}${suffix} place, earning ${placement} ${placement === 1 ? 'point' : 'points'}. No championship or runner-up bonus applies.`;
+}
+
 // Error descriptions supplement hints and are removed independently on correction.
 export function clearFieldError(input) {
   const errorId = input.dataset.validationError;

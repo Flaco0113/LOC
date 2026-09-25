@@ -80,7 +80,7 @@ function newLeague(u, b) {
   const scheduled = b.scheduled ? Date.parse(b.scheduled) : null;
   requireThat(!b.scheduled || (Number.isFinite(scheduled) && scheduled > now()), 'Choose a future draft date, or schedule later.', 'scheduled');
   requireThat([30,60,90,120].includes(+b.timer), 'Choose a valid pick timer.', 'timer');
-  const l = { id: id(), name: clean(b.name), description: clean(b.description,500), season: +b.season, capacity: +b.capacity, sports: b.sports, scheduled, timer: +b.timer, order: b.order === 'manual' ? 'manual' : 'random', owner: u.id, members: [{ id:u.id, name:u.name }], sample: !!u.sample, status:'scheduled', picks:[], queues:{}, chat:[], activity:[], version:0, deadline:null, remaining:null, locked:false, updated:now() };
+  const l = { id: id(), createdAt: now(), name: clean(b.name), description: clean(b.description,500), season: +b.season, capacity: +b.capacity, sports: b.sports, scheduled, timer: +b.timer, order: b.order === 'manual' ? 'manual' : 'random', owner: u.id, members: [{ id:u.id, name:u.name }], sample: !!u.sample, status:'scheduled', picks:[], queues:{}, chat:[], activity:[], version:0, deadline:null, remaining:null, locked:false, updated:now() };
   db.leagues.push(l); activity(l,u.id,'Created the league.'); return l;
 }
 function sampleUser(name) { const u = { id:id(), name, email:`${id()}@sample.local`, zone:'America/New_York', sample:true }; db.users.push(u); return u; }
@@ -183,11 +183,11 @@ function api(req,res,pathname,b,u) {
         if(b.status==='live') {
           requireThat(['scheduled','paused'].includes(l.status),'Only scheduled or paused drafts can start.');requireThat(l.members.length===l.capacity,'Fill every manager slot before starting.');
           if(l.status==='scheduled'&&l.order==='random'){for(let i=l.members.length-1;i>0;i--){const j=crypto.randomInt(i+1);[l.members[i],l.members[j]]=[l.members[j],l.members[i]];}}
-          l.deadline=now()+(l.remaining ?? l.timer*1000);l.remaining=null;l.status='live';
+          if(l.status==='scheduled')l.draftStartedAt=now();l.deadline=now()+(l.remaining ?? l.timer*1000);l.remaining=null;l.status='live';
         } else if(b.status==='paused'){requireThat(l.status==='live','Only a live draft can pause.');l.remaining=Math.max(1000,l.deadline-now());l.deadline=null;l.status='paused';} else fail(422,'Unsupported draft state.');
         l.version++;activity(l,u.id,`${l.status==='live'?'Started/resumed':'Paused'} the draft.`);
       }
-      else if(action==='reset') {requireThat(clean(b.reason).length>=5,'Explain why you are resetting this draft.','reason');l.picks=[];l.queues={};l.deadline=null;l.remaining=null;l.status='scheduled';l.version++;activity(l,u.id,`Reset draft and cleared rosters/scores. Reason: ${clean(b.reason,500)}`);}
+      else if(action==='reset') {requireThat(clean(b.reason).length>=5,'Explain why you are resetting this draft.','reason');l.picks=[];l.queues={};l.draftStartedAt=null;l.deadline=null;l.remaining=null;l.status='scheduled';l.version++;activity(l,u.id,`Reset draft and cleared rosters/scores. Reason: ${clean(b.reason,500)}`);}
       else if(action==='score') {
         requireThat(l.status==='complete','Finish the draft before entering results.');const p=l.picks.find(p=>p.id===b.pickId);requireThat(p,'Choose a drafted team.','pickId');requireThat(clean(b.reason).length>=5,'Explain the result or correction.','reason');const old=points(p);
         if(b.mode==='override'){requireThat(Number.isInteger(+b.points)&&+b.points>=0&&+b.points<=100,'Use a whole number from 0 to 100.','points');p.override=+b.points;}else {requireThat(b.finish===''||(Number.isInteger(+b.finish)&&+b.finish>=1&&+b.finish<=32),'Choose a finish from 1 to 32, or pending.','finish');p.finish=b.finish===''?null:+b.finish;p.override=null;}

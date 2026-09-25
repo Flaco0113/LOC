@@ -41,7 +41,7 @@ checks, not a claim that user research or an accessibility certification occurre
 - Draft panels gain mobile tab roles/labels at 390px and remove them at 1440px
   immediately on resize, without requiring a route change or server update.
 
-- `node --test tests/*.test.js`: 17 passing tests, including the enclosing suite.
+- `node --test tests/*.test.js`: 20 passing tests, including the enclosing suite.
 - JavaScript syntax checks pass for client and server.
 - Browser reviewed at 1440×900, 1024×768, 390×844, 320×780, and 844×390.
 - 320px queue page fits the viewport; the board retains deliberate horizontal scroll.
@@ -84,3 +84,7 @@ The local server now records aggregate completed/failed API outcomes and total
 duration in `.local/metrics.json`, retained for 90 days. It records no identities,
 league IDs, passwords, tokens, email addresses, form values, or chat content and
 does not transmit analytics to a third party.
+
+## September 25 backlog pass
+
+BL-001 through BL-004 are complete; see `BACKLOG.md` for behavior and browser verification. Championship dates are explicit month-end planning estimates, not live schedules.

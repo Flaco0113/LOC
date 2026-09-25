@@ -30,3 +30,17 @@
 @media(max-width:760px){.boot-skeleton{grid-template-columns:1fr}.data-table,.data-table .text-link{font-size:14px}.draft-work-tabs .button{font-size:13px}.page-head{flex-wrap:wrap}.clock-side .avatar{display:none}.clock-side strong{font-size:14px}.draft-clock-bar .small{font-size:12px}.mobile-nav .nav-item{font-size:12px}.stat-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.league-nav{margin-right:0}.draft-columns>.panel{padding:16px}.chat-form .field{min-width:0}}
 @media(max-width:400px){.stat-strip{grid-template-columns:1fr}.stat{border-right:0;border-bottom:1px solid var(--line)}.stat strong{font-size:22px}.stat strong small{display:inline;margin-left:10px}.public-header nav{gap:4px}.public-header .button{padding:8px 10px}}
 @media(max-height:500px){.draft-clock-bar{position:static}.selection-panel{position:static}}
+/* Backlog: floating contender stays inside its own grid track and viewport. */
+.draft-columns{align-items:stretch}.contender-column{min-width:0;align-self:stretch}.contender-column>.panel{padding:22px}
+.contender-column>.selection-panel{align-self:start;position:sticky;top:16px;max-height:calc(100dvh - 16px - 16px);overflow:auto;overscroll-behavior:contain;min-width:0;overflow-wrap:anywhere}
+#override-picker select[size]{height:240px;width:100%;max-width:100%;white-space:normal}
+#override-picker option{padding:8px;white-space:normal}
+.league-timeframe{margin-top:10px}.league-timeframe .pill{margin:4px 0}
+.timeframe-details{margin-top:6px;font-size:13px;color:var(--muted)}
+.timeframe-details summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--info)}
+.timeframe-details p{margin:6px 0}.timeframe-details ul{padding-left:20px;margin:8px 0}
+.roster-team>div{min-width:0}.roster-team p{overflow-wrap:anywhere}.roster-team>strong{white-space:nowrap}
+@media(max-width:760px){.contender-column{display:none}.selection-panel{position:static;max-height:none}#selection-sheet{margin:0}.league-timeframe{line-height:1.7}}
+@media(max-height:500px){.contender-column>.selection-panel{position:static;max-height:none}}
+
+@media(min-width:761px){.draft-clock-bar{position:static}}

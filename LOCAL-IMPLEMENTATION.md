@@ -57,7 +57,7 @@ see `FOLLOW-UP.md`. They remain disconnected during local enhancement review.
 
 Automated integration suite: `node --test tests/*.test.js`.
 
-17 tests passed in the latest run, including email lifecycle/provider tests,
+20 tests passed in the latest run, including email lifecycle/provider tests,
 snake-turn distance, privacy-preserving metrics, and the original end-to-end
 suite: clean accounts and password hashing; saved configuration and
 league isolation; partial invitation failures, decline/undo, and acceptance;
