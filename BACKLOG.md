@@ -4,9 +4,13 @@ Use this file to capture ideas, bugs, questions, and improvements while testing.
 
 ## Open
 
-No open items. Real email, live schedules and hosted integration remain deferred in `FOLLOW-UP.md`.
+Real email and live sports schedules remain deferred in `FOLLOW-UP.md`.
 
 ## Completed
+
+Completed September 26, 2026.
+
+- [x] BL-005 — Repair the production frontend-to-API connection. (added and completed 2026-09-26)
 
 Completed September 25, 2026.
 
@@ -28,3 +32,4 @@ Completed September 25, 2026.
 ### Verification
 
 20 automated tests pass. Browser checks covered full-list search and a committed commissioner pick in an isolated test store; panel containment at 1024px and a 390px modal sheet; and readable score explanations. Test mutations did not use the user’s league store.
+
