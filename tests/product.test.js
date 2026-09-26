@@ -31,5 +31,15 @@ test('Local championship tools persist, enforce permissions, isolate notes and l
  await owner.call(url('invite'),{emails:'other@qa.local'});const invite=(await other.call('/api/state')).invitations[0];await other.call('/api/invitations',{id:invite.id,action:'accept'});
  await owner.call(url('research'),{teamId:l.teams[0].id,note:'Owner only',watched:true});const view=(await other.call('/api/state')).leagues[0];assert.equal(JSON.stringify(view.research).includes('Owner only'),false);
  await other.call(url('scores'),{},403);await other.call(url('editions'),{},403);
- await stop();await start();l=(await owner.call('/api/state')).leagues.find(x=>x.id===lid);assert.equal(l.editions[0].endMonth,'2027-12');assert.ok(Object.values(l.research).some(notes=>Object.values(notes).some(n=>n.note==='Owner only')));
+ await owner.call(url('article'),{title:'Private draft guide',body:'A locally authored guide for our next draft.',status:'draft',sport:'NBA'});
+ let articles=(await owner.call('/api/state')).leagues.find(x=>x.id===lid).articles;const articleId=articles[0].id;
+ assert.equal((await other.call('/api/state')).leagues[0].articles.length,0);
+ await other.call(url('article'),{id:articleId,title:'Unauthorized edit',body:'This must not be allowed.',status:'published',sport:'NBA'},422);
+ await owner.call(url('article'),{id:articleId,title:'Published draft guide',body:'A locally authored guide for our next draft.',status:'published',sport:'NBA'});
+ assert.equal((await other.call('/api/state')).leagues[0].articles.length,1);
+ await owner.call(url('alertpreferences'),{sports:['NBA'],results:true,content:false,drafts:true});
+ assert.equal(Object.keys((await other.call('/api/state')).leagues[0].alertPreferences).length,1);
+ const exported=await fetch(base+url('export')+'?format=recap',{headers:{Cookie:owner.cookie}});assert.equal(exported.status,200);assert.match(exported.headers.get('content-disposition'),/attachment/);assert.doesNotMatch(await exported.text(),/Owner only/);
+ assert.equal((await fetch(base+url('export')+'?format=recap')).status,401);
+ await stop();await start();l=(await owner.call('/api/state')).leagues.find(x=>x.id===lid);assert.equal(l.articles[0].title,'Published draft guide');assert.equal(Object.values(l.alertPreferences)[0].content,false);assert.equal(l.editions[0].endMonth,'2027-12');assert.ok(Object.values(l.research).some(notes=>Object.values(notes).some(n=>n.note==='Owner only')));
 });

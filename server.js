@@ -1,3 +1,5 @@
+import {recap,historyRows} from './experience-model.js';
+import {experienceAction} from './experience-server.js';
 import {ensureProductState,scoreValue} from './product-model.js';
 import {productAction,recordScore} from './product-server.js';
 import http from 'node:http';
@@ -70,7 +72,7 @@ function standings(l) {
   const rows = l.members.map(m => { const picks = l.picks.filter(p => p.userId === m.id); return { ...m, total: picks.reduce((s,p) => s + points(p), 0), drafted: picks.length }; }).sort((a,b) => b.total-a.total || a.name.localeCompare(b.name));
   rows.forEach((r,i) => r.rank = i && r.total === rows[i-1].total ? rows[i-1].rank : i+1); return rows;
 }
-function leagueView(l, uid) { ensureProductState(l); return { ...l, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
+function leagueView(l, uid) { ensureProductState(l); return { ...l, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
 function snapshot(u) {
   return { emailMode:mailConfig.mode, emailStatus:u?(db.mail||[]).filter(m=>m.userId===u.id).slice(-1).map(m=>({status:m.status,error:m.error||null}))[0]||null:null, user: u ? publicUser(u) : null, revision: db.revision, serverTime: now(), sports: Object.keys(catalog), leagues: u ? db.leagues.filter(l => member(l,u.id)).map(l => leagueView(l,u.id)) : [], invitations: u ? db.invites.filter(i => i.email === u.email).map(i => ({ ...i, league: db.leagues.find(l => l.id === i.leagueId) && ((l) => ({ name: l.name, sports: l.sports, season: l.season, capacity: l.capacity, joined: l.members.length, scheduled: l.scheduled, owner: l.members.find(m => m.id === l.owner)?.name }))(db.leagues.find(l => l.id === i.leagueId)) })) : [] };
 }
@@ -156,6 +158,8 @@ function api(req,res,pathname,b,u) {
   const match=pathname.match(/^\/api\/leagues\/([^/]+)\/(\w+)$/);if(!match)fail(404,'Not found.');
   return transaction(()=>{
     const l=ensureProductState(leagueFor(u.id,match[1])), action=match[2];
+    const experience=experienceAction(l,u,action,b,{requireThat,clean,id,activity});
+    if(experience!==null)return {...snapshot(u),...experience};
     const product=productAction(l,u,action,b,{requireThat,commissioner,activity,clean,id,newLeague,teams});
     if(product!==null)return {...snapshot(u),...product};
     if(['score','correct','reset','status'].includes(action))requireThat(l.competitionState==='active','Reopen the final season before editing results or drafting.');
@@ -213,12 +217,20 @@ const server=http.createServer(async(req,res)=>{
     const host=req.headers.host;
     if(![`localhost:${port}`,`127.0.0.1:${port}`].includes(host))fail(403,'Localhost access only.');
     const url=new URL(req.url,`http://${host}`);if(req.method==='POST'&&url.pathname.startsWith('/api/')){const began=Date.now();res.on('finish',()=>{try{recordOutcome(dataDir,url.pathname,res.statusCode,Date.now()-began);}catch{console.error('Could not save aggregate outcome metrics.');}});}
+    const exportMatch=url.pathname.match(/^\/api\/leagues\/([^/]+)\/export$/);
+    if(exportMatch&&req.method==='GET'){
+      const user=readSession(req);if(!user)fail(401,'Sign in to download a league export.');const l=leagueFor(user.id,exportMatch[1]),format=url.searchParams.get('format');
+      requireThat(['recap','history'].includes(format),'Choose a supported export.');
+      const rows=format==='history'?historyRows(l).flatMap(x=>x.rows.map(r=>[new Date(x.at).toISOString(),x.revision,r.id,r.total,r.rank])):[];
+      const content=format==='recap'?recap(l):'Recorded,Revision,Manager ID,Points,Rank\r\n'+rows.map(r=>r.join(',')).join('\r\n');
+      res.setHeader('Content-Type',format==='recap'?'text/plain; charset=utf-8':'text/csv; charset=utf-8');res.setHeader('Content-Disposition','attachment; filename="LOC-'+format+(format==='recap'?'.txt':'.csv')+'"');res.end(content);return;
+    }
     if(url.pathname.startsWith('/api/')) {
       if(req.method==='POST'&&req.headers.origin&&req.headers.origin!==`http://${host}`)fail(403,'Cross-origin request rejected.');
       const b=req.method==='POST'?await body(req):{};advanceClocks();const result=api(req,res,url.pathname,b,readSession(req));res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;
     }
     if(req.method!=='GET')fail(405,'Method not supported.');
-    const allowed=['/product-model.js','/product-ui.js','/ui-state.js','/script.js','/styles.css','/favicon.svg']; let file;
+    const allowed=['/experience-model.js','/experience-ui.js','/product-model.js','/product-ui.js','/ui-state.js','/script.js','/styles.css','/favicon.svg']; let file;
     if(allowed.includes(url.pathname))file=path.join(root,url.pathname.slice(1));
     else if(url.pathname==='/assets/loc-hero.png')file=path.join(root,'assets','loc-hero.png');
     else if(!path.extname(url.pathname)||url.pathname==='/index.html')file=path.join(root,'index.html');

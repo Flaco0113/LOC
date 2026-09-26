@@ -26,8 +26,8 @@ This release implements the local championship workflow from the product review.
 - **Real email and live sports data remain deferred at the user's request.** No provider, feed, news, injury data, projections or delivery service was activated.
 - Actual AI analysis, predictive recommendations and optimization require approved data/model integrations and evaluation. The shipped guide is explicitly deterministic.
 - Sport-specific elimination and tie policies require a separately approved scoring change. Current scoring is preserved as instructed.
-- The practice walkthrough is a short rehearsal; a full simulated multiplayer draft tutorial remains a larger onboarding extension.
-- Creator content, cross-season rivalry aggregates, shareable season recaps, richer historical charts, and personalized news/alerts remain strategic extensions. Existing archives, renewals, result ledgers and contribution meters provide their local foundation; they are not represented as full delivery of those concepts.
+- The full local practice draft is now delivered (see the follow-through release below).
+- Local creator articles, cross-season rivalry aggregates, downloadable recaps, historical charts and personalized in-app updates are now delivered. Provider-sourced news, external expert content, push/email delivery and predictive AI remain deferred with external integrations.
 - Human screen-reader acceptance and first-time-user research remain required before claiming accessibility or usability validation is complete.
 
 ## Verification
@@ -38,3 +38,19 @@ This release implements the local championship workflow from the product review.
 - Restarted and opened the actual local app at `http://localhost:4173` with existing user data intact.
 
 Legacy leagues receive additive metadata; existing scores are not reinterpreted. Scoring history begins with new changes and does not fabricate past ranking snapshots. Historical records remain after a draft reset as an audit trail. Custom contenders are manually maintained and appended after the illustrative catalog for timeout ordering.
+
+## Local roadmap follow-through — September 25, 2026
+
+The user explicitly confirmed: **keep external AI deferred; complete local features**. This follow-through completes the remaining implementable local features named in the previous status report:
+
+- **Full simulated draft:** standalone `/practice` works before sign-in and from Home. Four participants, two sports, snake ordering, bots, private practice queue, skipped entries, simulated timeouts, eight-pick board, hypothetical results and shared ranks. Progress survives reload in the same browser tab. Restart never touches a real league.
+- **Creator content:** More league tools → Stories & analysis. Any member can write original content, save a private draft, publish to their league, edit their own work, or withdraw it to draft. Authors, timestamps, sport tags and optional source URLs are visible. Commissioners can feature published work. Drafts are filtered by the server; commissioners cannot read other authors' private drafts.
+- **Rivalries:** More → History & rivalries. Win/loss/tie totals use finalized linked seasons that the current user can access. Different leagues, provisional results, and inaccessible history are excluded. Managers are matched by identity, not by display name.
+- **Recaps:** preview plain-text season recaps before downloading and sharing them yourself. Exports contain standings and roster results, with provisional/sample labels. They omit private research and discussion. Downloads require league membership and an authenticated session.
+- **History charts:** choose manager and points/rank. SVG charts show up to 40 recorded updates with an accessible exact-value table. A CSV download contains the recorded history. Draft resets separate the current draft chart from earlier history. No old sporting statistics are reconstructed.
+- **Personalization:** More → Your updates has favorite-sport and result/article/draft-reminder preferences, persistent read state, watched/owned contender result updates, and a seven-day upcoming-draft reminder. Home's For you panel shows unread updates across accessible leagues. This is local authored content and in-app information, not live sports news or background push.
+- **Accessibility implementation:** semantic chart description and table alternative, keyboard-operable publishing and practice flows, practice-step focus after picks, native recap dialog, labeled fields and reduced-motion styling.
+
+Validation: **26 passing tests**, including complete snake simulation, timeout fallback, linked-season tie accounting, feed filtering/read state, author permissions, API draft privacy, preferences/restart persistence and authenticated recap export. Browser checks completed the practice draft (21 points from champion + runner-up), reload persistence, private-draft-to-published workflow, personalized article updates, mark-read, point/rank chart selection, and an actual recap download. At 390px the history page had no document overflow; captured browser console errors were empty.
+
+Remaining work is deliberately external or human: real email, live sports feeds/news, external AI/predictions, and actual human screen-reader/first-time-user acceptance. No scoring policy changes were made. Human acceptance instructions are in `USER-ACCEPTANCE.md`; they are prepared, not falsely reported as completed research.
