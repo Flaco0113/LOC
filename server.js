@@ -1,3 +1,5 @@
+import {ensureProductState,scoreValue} from './product-model.js';
+import {productAction,recordScore} from './product-server.js';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,7 +36,7 @@ function member(l, uid) { return l.members.some(m => m.id === uid); }
 function leagueFor(uid, lid) { const l = db.leagues.find(l => l.id === lid && member(l, uid)); if (!l) fail(404, 'League unavailable. It may have been removed or your membership changed.'); return l; }
 function commissioner(l, uid) { if (l.owner !== uid) fail(403, 'Only the commissioner can make this change.'); }
 function activity(l, uid, text) { l.activity.unshift({ id: id(), at: now(), actor: db.users.find(u => u.id === uid)?.name || 'Draft clock', text }); l.updated = now(); }
-function teams(l) { return l.sports.flatMap(sport => catalog[sport].map((name, rank) => ({ id: `${sport}:${rank}`, name, sport, rank: rank + 1 }))); }
+function teams(l) { return (l.extraTeams || []).concat(l.sports.flatMap(sport => catalog[sport].map((name, rank) => ({ id: `${sport}:${rank}`, name, sport, rank: rank + 1 })))); }
 function current(l) { const n = l.members.length, i = l.picks.length, round = Math.floor(i / n); return l.members[round % 2 ? n - 1 - i % n : i % n]; }
 function eligible(l, uid) { return teams(l).filter(t => !l.picks.some(p => p.team.id === t.id || (p.userId === uid && p.team.sport === t.sport))); }
 function pick(l, uid, teamId, expected, overrideReason) {
@@ -63,12 +65,12 @@ function advanceClocks() {
     activity(l, null, `Timeout: ${turn.name} received ${team.name} from ${queue.includes(team.id) ? 'their queue' : 'the highest-ranked eligible available teams'}.`);
   }));
 }
-function points(p) { if (p.override !== null) return p.override; return p.finish ? Math.max(0, 10 - p.finish) + (p.finish === 1 ? 3 : p.finish === 2 ? 1 : 0) : 0; }
+function points(p) { return scoreValue(p); }
 function standings(l) {
   const rows = l.members.map(m => { const picks = l.picks.filter(p => p.userId === m.id); return { ...m, total: picks.reduce((s,p) => s + points(p), 0), drafted: picks.length }; }).sort((a,b) => b.total-a.total || a.name.localeCompare(b.name));
   rows.forEach((r,i) => r.rank = i && r.total === rows[i-1].total ? rows[i-1].rank : i+1); return rows;
 }
-function leagueView(l, uid) { return { ...l, outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
+function leagueView(l, uid) { ensureProductState(l); return { ...l, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
 function snapshot(u) {
   return { emailMode:mailConfig.mode, emailStatus:u?(db.mail||[]).filter(m=>m.userId===u.id).slice(-1).map(m=>({status:m.status,error:m.error||null}))[0]||null:null, user: u ? publicUser(u) : null, revision: db.revision, serverTime: now(), sports: Object.keys(catalog), leagues: u ? db.leagues.filter(l => member(l,u.id)).map(l => leagueView(l,u.id)) : [], invitations: u ? db.invites.filter(i => i.email === u.email).map(i => ({ ...i, league: db.leagues.find(l => l.id === i.leagueId) && ((l) => ({ name: l.name, sports: l.sports, season: l.season, capacity: l.capacity, joined: l.members.length, scheduled: l.scheduled, owner: l.members.find(m => m.id === l.owner)?.name }))(db.leagues.find(l => l.id === i.leagueId)) })) : [] };
 }
@@ -81,7 +83,7 @@ function newLeague(u, b) {
   requireThat(!b.scheduled || (Number.isFinite(scheduled) && scheduled > now()), 'Choose a future draft date, or schedule later.', 'scheduled');
   requireThat([30,60,90,120].includes(+b.timer), 'Choose a valid pick timer.', 'timer');
   const l = { id: id(), createdAt: now(), name: clean(b.name), description: clean(b.description,500), season: +b.season, capacity: +b.capacity, sports: b.sports, scheduled, timer: +b.timer, order: b.order === 'manual' ? 'manual' : 'random', owner: u.id, members: [{ id:u.id, name:u.name }], sample: !!u.sample, status:'scheduled', picks:[], queues:{}, chat:[], activity:[], version:0, deadline:null, remaining:null, locked:false, updated:now() };
-  db.leagues.push(l); activity(l,u.id,'Created the league.'); return l;
+  ensureProductState(l); db.leagues.push(l); activity(l,u.id,'Created the league.'); return l;
 }
 function sampleUser(name) { const u = { id:id(), name, email:`${id()}@sample.local`, zone:'America/New_York', sample:true }; db.users.push(u); return u; }
 function createSample() {
@@ -153,7 +155,10 @@ function api(req,res,pathname,b,u) {
   });
   const match=pathname.match(/^\/api\/leagues\/([^/]+)\/(\w+)$/);if(!match)fail(404,'Not found.');
   return transaction(()=>{
-    const l=leagueFor(u.id,match[1]), action=match[2];
+    const l=ensureProductState(leagueFor(u.id,match[1])), action=match[2];
+    const product=productAction(l,u,action,b,{requireThat,commissioner,activity,clean,id,newLeague,teams});
+    if(product!==null)return {...snapshot(u),...product};
+    if(['score','correct','reset','status'].includes(action))requireThat(l.competitionState==='active','Reopen the final season before editing results or drafting.');
     if(action==='pick') pick(l,u.id,b.teamId,b.version,b.override ? clean(b.reason,500):null);
     else if(action==='queue') {
       requireThat(l.status!=='complete','The draft is complete.'); const pool=eligible(l,u.id).map(t=>t.id), q=l.queues[u.id]||[];
@@ -187,13 +192,14 @@ function api(req,res,pathname,b,u) {
         } else if(b.status==='paused'){requireThat(l.status==='live','Only a live draft can pause.');l.remaining=Math.max(1000,l.deadline-now());l.deadline=null;l.status='paused';} else fail(422,'Unsupported draft state.');
         l.version++;activity(l,u.id,`${l.status==='live'?'Started/resumed':'Paused'} the draft.`);
       }
-      else if(action==='reset') {requireThat(clean(b.reason).length>=5,'Explain why you are resetting this draft.','reason');l.picks=[];l.queues={};l.draftStartedAt=null;l.deadline=null;l.remaining=null;l.status='scheduled';l.version++;activity(l,u.id,`Reset draft and cleared rosters/scores. Reason: ${clean(b.reason,500)}`);}
+      else if(action==='reset') {requireThat(clean(b.reason).length>=5,'Explain why you are resetting this draft.','reason');l.picks=[];l.queues={};l.scoreRevision++;l.draftStartedAt=null;l.deadline=null;l.remaining=null;l.status='scheduled';l.version++;activity(l,u.id,`Reset draft and cleared rosters/scores. Reason: ${clean(b.reason,500)}`);}
       else if(action==='score') {
-        requireThat(l.status==='complete','Finish the draft before entering results.');const p=l.picks.find(p=>p.id===b.pickId);requireThat(p,'Choose a drafted team.','pickId');requireThat(clean(b.reason).length>=5,'Explain the result or correction.','reason');const old=points(p);
+        requireThat(l.status==='complete','Finish the draft before entering results.');if(b.revision!==undefined)requireThat(Number(b.revision)===l.scoreRevision,'Scores changed. Reload before saving this correction.','revision');const p=l.picks.find(p=>p.id===b.pickId);requireThat(p,'Choose a drafted team.','pickId');requireThat(clean(b.reason).length>=5,'Explain the result or correction.','reason');const old=points(p);
         if(b.mode==='override'){requireThat(Number.isInteger(+b.points)&&+b.points>=0&&+b.points<=100,'Use a whole number from 0 to 100.','points');p.override=+b.points;}else {requireThat(b.finish===''||(Number.isInteger(+b.finish)&&+b.finish>=1&&+b.finish<=32),'Choose a finish from 1 to 32, or pending.','finish');p.finish=b.finish===''?null:+b.finish;p.override=null;}
+        recordScore(l,p,old,clean(b.reason,500),u,{id});
         activity(l,u.id,`${p.team.name}: ${old} → ${points(p)} points. ${clean(b.reason,500)}`);
       }
-      else if(action==='correct') {requireThat(l.status==='paused'||l.status==='complete','Pause the draft before correcting a pick.');const p=l.picks.find(p=>p.id===b.pickId),t=teams(l).find(t=>t.id===b.teamId);requireThat(p&&t&&p.team.sport===t.sport,'Choose an available team in the same sport.','teamId');requireThat(!l.picks.some(other=>other.id!==p.id&&other.team.id===t.id),'That team is already drafted.','teamId');requireThat(clean(b.reason).length>=5,'Explain this correction.','reason');const old=p.team.name;p.team=t;p.finish=null;p.override=null;l.version++;activity(l,u.id,`Corrected ${old} → ${t.name}; score reset to pending. ${clean(b.reason,500)}`);}
+      else if(action==='correct') {requireThat(l.status==='paused'||l.status==='complete','Pause the draft before correcting a pick.');const p=l.picks.find(p=>p.id===b.pickId),t=teams(l).find(t=>t.id===b.teamId);requireThat(p&&t&&p.team.sport===t.sport,'Choose an available team in the same sport.','teamId');requireThat(!l.picks.some(other=>other.id!==p.id&&other.team.id===t.id),'That team is already drafted.','teamId');requireThat(clean(b.reason).length>=5,'Explain this correction.','reason');const old=p.team.name,oldPoints=points(p);p.team=t;p.finish=null;p.override=null;l.version++;recordScore(l,p,oldPoints,`Pick correction: ${old} → ${t.name}. ${clean(b.reason,500)}`,u,{id});activity(l,u.id,`Corrected ${old} → ${t.name}; score reset to pending. ${clean(b.reason,500)}`);}
       else fail(404,'Action unavailable.');
     }
     return snapshot(u);
@@ -212,7 +218,7 @@ const server=http.createServer(async(req,res)=>{
       const b=req.method==='POST'?await body(req):{};advanceClocks();const result=api(req,res,url.pathname,b,readSession(req));res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;
     }
     if(req.method!=='GET')fail(405,'Method not supported.');
-    const allowed=['/ui-state.js','/script.js','/styles.css','/favicon.svg']; let file;
+    const allowed=['/product-model.js','/product-ui.js','/ui-state.js','/script.js','/styles.css','/favicon.svg']; let file;
     if(allowed.includes(url.pathname))file=path.join(root,url.pathname.slice(1));
     else if(url.pathname==='/assets/loc-hero.png')file=path.join(root,'assets','loc-hero.png');
     else if(!path.extname(url.pathname)||url.pathname==='/index.html')file=path.join(root,'index.html');

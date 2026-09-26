@@ -29,3 +29,7 @@ Complete screen-reader sessions, physical-device checks, 200% text enlargement,
 These remain validation work, not claims of completed certification or research.
 
 See `UX-VALIDATION.md` for the implemented audit findings and observed checks.
+
+## Product review follow-through (September 25, 2026)
+
+The new local championship workspace is documented in [CHAMPIONSHIP-IMPLEMENTATION.md](CHAMPIONSHIP-IMPLEMENTATION.md), including delivered features, verification and remaining strategic extensions. Keep real email/live data disabled until explicitly authorized. Preserve placement points and bonuses; new sport-specific scoring policies need a separate decision. Full simulated onboarding, creator content, cross-season rivalry analytics and shareable recaps remain roadmap extensions; do not mark the entire strategic review complete.

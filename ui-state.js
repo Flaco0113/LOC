@@ -14,6 +14,8 @@ export function leagueTimeframe(league) {
   const start = draftStart || Math.max(created, seasonStart);
   const year = new Date(start).getUTCFullYear();
   const events = league.sports.map(sport => {
+    const edition=league.editions?.find(e=>e.sport===sport);
+    if(edition){const [y,m]=edition.endMonth.split('-').map(Number);return {sport,end:Date.UTC(y,m,0,23,59,59,999)};}
     const month = championshipMonths[sport];
     let end = Date.UTC(year, month, 0, 23, 59, 59, 999);
     if (end < start) end = Date.UTC(year + 1, month, 0, 23, 59, 59, 999);

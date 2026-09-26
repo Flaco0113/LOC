@@ -47,3 +47,7 @@ no real email. GitHub Actions runs the checks on Windows and Linux.
 The Supabase backend includes the initial schema, Row Level Security policies, Realtime-ready tables, scoring model, and draft clock Edge Function.
 
 See `supabase/README.md` for deployment notes.
+
+## Championship workspace enhancements
+
+See [CHAMPIONSHIP-IMPLEMENTATION.md](CHAMPIONSHIP-IMPLEMENTATION.md) for the September 2026 release: competition editions, season finalization, results previews and audit history, private research, discussion and polls, scenario scoring, archives and renewal. Current scoring is unchanged. Real email and live data remain deferred.
