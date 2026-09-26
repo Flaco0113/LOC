@@ -2,6 +2,18 @@
 
 League of Champions is a multi-sport fantasy league concept where managers draft entire teams or competitors, track postseason results, and compete for a year-round championship.
 
+## Shared public beta
+
+[Open LOC](https://loc-one.vercel.app/). Create a personal account and save its
+recovery code. Create a league, then open **Settings → Generate join code**.
+Send the code or join link privately to friends; they create their own accounts
+and enter the code under **Invitations → Join with a league code**.
+
+The public app stores accounts and leagues in Supabase through an authenticated
+Edge API. Local accounts and leagues remain separate on this computer. Email,
+live sports feeds and external AI remain disabled; scoring is commissioner-entered.
+See [PUBLIC-DEPLOYMENT.md](PUBLIC-DEPLOYMENT.md) for deployment and recovery details.
+
 ## Run the redesigned local app
 
 Double-click `Start-LOC.cmd` or run `node server.js` in this folder. Open

@@ -17,10 +17,11 @@ Publishing source changes to GitHub does not activate either integration.
   define competition/season mappings, refresh cadence, source timestamps,
   provisional/final results, correction handling and stale-feed feedback before
   connecting the feed. Preserve commissioner oversight and the scoring audit log.
-- **Hosted backend:** plan migration from the local store, hosted authentication,
-  durable draft scheduling, backups and deployment. Inspect the existing Supabase
-  project before applying changes. Its existing schema is not connected to this
-  local app, and this enhancement pass makes no remote database changes.
+- **Hosted backend:** now implemented for the shared public beta with separate
+  online accounts, persistent storage, join codes, and a background draft clock.
+  See `PUBLIC-DEPLOYMENT.md`. Before a broad launch, complete offsite backup/restore
+  drills, capacity testing, and migration from the beta state document to partitioned
+  league storage. Local user data has not been uploaded.
 
 ## Release acceptance
 
