@@ -47,7 +47,7 @@ function pick(l, uid, teamId, expected, overrideReason) {
   l.version++;
   activity(l, overrideReason ? uid : turn.id, `Drafted ${team.name} (${team.sport})${overrideReason ? ` · Commissioner override: ${overrideReason}` : ''}.`);
   if (l.picks.length === l.members.length * l.sports.length) { l.status = 'complete'; l.deadline = null; activity(l, null, 'Draft complete. All sport slots filled.'); }
-  else l.deadline = now() + l.timer * 1000;
+  else l.deadline = now() + (l.sample&&current(l)?.id!==l.owner?crypto.randomInt(2,8)*1000:l.timer*1000);
 }
 function advanceClocks() {
   const due = db.leagues.filter(l => l.status === 'live' && l.deadline <= now());
@@ -59,7 +59,7 @@ function advanceClocks() {
     const team = queue.map(t => pool.find(p => p.id === t)).find(Boolean) || pool.sort((a,b) => a.rank - b.rank || a.sport.localeCompare(b.sport))[0];
     if (!team) { l.status = 'paused'; l.deadline = null; activity(l, null, 'Draft paused: no eligible team available. Commissioner action required.'); return; }
     pick(l, turn.id, team.id, l.version);
-    if(l.status==='live')l.deadline=deadline+l.timer*1000;
+    if(l.status==='live'&&!l.sample)l.deadline=deadline+l.timer*1000;
     activity(l, null, `Timeout: ${turn.name} received ${team.name} from ${queue.includes(team.id) ? 'their queue' : 'the highest-ranked eligible available teams'}.`);
     }
   }));
@@ -69,19 +69,20 @@ function standings(l) {
   const rows = l.members.map(m => { const picks = l.picks.filter(p => p.userId === m.id); return { ...m, total: picks.reduce((s,p) => s + points(p), 0), drafted: picks.length }; }).sort((a,b) => b.total-a.total || a.name.localeCompare(b.name));
   rows.forEach((r,i) => r.rank = i && r.total === rows[i-1].total ? rows[i-1].rank : i+1); return rows;
 }
-function leagueView(l, uid) { ensureProductState(l); return { ...l, sports:[...l.sports].sort(alphabetical), joinAccess:l.owner===uid?l.joinAccess:undefined, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
+function leagueView(l, uid) { ensureProductState(l); return { ...l, seasonLabel:l.seasonLabel||String(l.season), chat:(l.chat||[]).map(m=>({...m,origin:m.origin||(l.draftStartedAt&&m.at>=l.draftStartedAt?'draft':'discussion')})), sports:[...l.sports].sort(alphabetical), joinAccess:l.owner===uid?l.joinAccess:undefined, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
 function snapshot(u) {
   return { deployment:hosted?'public':'local', emailMode:mailConfig.mode, emailStatus:u?(db.mail||[]).filter(m=>m.userId===u.id).slice(-1).map(m=>({status:m.status,error:m.error||null}))[0]||null:null, user: u ? publicUser(u) : null, revision: db.revision, serverTime: now(), sports: Object.keys(catalog).sort(alphabetical), leagues: u ? db.leagues.filter(l => member(l,u.id)).map(l => leagueView(l,u.id)) : [], invitations: u ? db.invites.filter(i => i.email === u.email).map(i => ({ ...i, league: db.leagues.find(l => l.id === i.leagueId) && ((l) => ({ name: l.name, sports: [...l.sports].sort(alphabetical), season: l.season, capacity: l.capacity, joined: l.members.length, scheduled: l.scheduled, owner: l.members.find(m => m.id === l.owner)?.name }))(db.leagues.find(l => l.id === i.leagueId)) })) : [] };
 }
 function newLeague(u, b) {
   requireThat(clean(b.name).length >= 3, 'Enter a league name with at least 3 characters.', 'name');
-  requireThat(Number.isInteger(+b.capacity) && +b.capacity >= 4 && +b.capacity <= 12, 'Choose 4–12 managers.', 'capacity');
+  requireThat(Number.isInteger(+b.capacity) && +b.capacity >= 2 && +b.capacity <= 20, 'Choose 2–20 managers.', 'capacity');
   requireThat(Array.isArray(b.sports) && b.sports.length && new Set(b.sports).size === b.sports.length && b.sports.every(s => catalog[s]), 'Select at least one supported sport.', 'sports');
-  requireThat(Number.isInteger(+b.season) && +b.season >= 2026 && +b.season <= 2100, 'Choose a season from 2026 to 2100.', 'season');
+  const seasonLabel=clean(b.seasonLabel??b.season,20),seasonMatch=seasonLabel.match(/^(20\d{2}|2100)(?:-(20\d{2}|2101))?$/),season=Number(seasonMatch?.[1]);
+  requireThat(seasonMatch&&(!seasonMatch[2]||Number(seasonMatch[2])===season+1)&&season>=2026&&season<=2100,'Choose a season from 2026 to 2100.','seasonLabel');
   const scheduled = b.scheduled ? Date.parse(b.scheduled) : null;
   requireThat(!b.scheduled || (Number.isFinite(scheduled) && scheduled > now()), 'Choose a future draft date, or schedule later.', 'scheduled');
   requireThat([30,60,90,120].includes(+b.timer), 'Choose a valid pick timer.', 'timer');
-  const l = { id: id(), createdAt: now(), name: clean(b.name), description: clean(b.description,500), season: +b.season, capacity: +b.capacity, sports: b.sports, scheduled, timer: +b.timer, order: b.order === 'manual' ? 'manual' : 'random', owner: u.id, members: [{ id:u.id, name:u.name }], sample: !!u.sample, status:'scheduled', picks:[], queues:{}, chat:[], activity:[], version:0, deadline:null, remaining:null, locked:false, updated:now() };
+  const l = { id: id(), createdAt: now(), name: clean(b.name), description: clean(b.description,500), season, seasonLabel, capacity: +b.capacity, sports: b.sports, scheduled, timer: +b.timer, order: b.order === 'manual' ? 'manual' : 'random', owner: u.id, members: [{ id:u.id, name:u.name }], sample: !!u.sample, status:'scheduled', picks:[], queues:{}, chat:[], activity:[], version:0, deadline:null, remaining:null, locked:false, updated:now() };
   if(hosted&&!u.sample)requireThat(db.leagues.filter(x=>x.owner===u.id).length<20,'You can own up to 20 leagues in this beta.');
   ensureProductState(l); db.leagues.push(l); activity(l,u.id,'Created the league.'); return l;
 }
@@ -176,13 +177,13 @@ function api(req,res,pathname,b,u) {
     if(['score','correct','reset','status'].includes(action))requireThat(l.competitionState==='active','Reopen the final season before editing results or drafting.');
     if(action==='pick') pick(l,u.id,b.teamId,b.version,b.override ? clean(b.reason,500):null);
     else if(action==='queue') {
-      requireThat(l.status!=='complete','The draft is complete.'); const pool=eligible(l,u.id).map(t=>t.id), q=l.queues[u.id]||[];
+      requireThat(l.status!=='complete','The draft is complete.');requireThat(l.status!=='paused','The draft is paused. Wait for the commissioner to resume it.'); const pool=eligible(l,u.id).map(t=>t.id), q=l.queues[u.id]||[];
       if(b.action==='add') {requireThat(pool.includes(b.teamId),'That team is not eligible for your roster.');if(!q.includes(b.teamId))q.push(b.teamId);}
       else if(b.action==='remove'){const i=q.indexOf(b.teamId);if(i>=0)q.splice(i,1);}
       else if(['up','down'].includes(b.action)){const i=q.indexOf(b.teamId),j=i+(b.action==='up'?-1:1);if(i>=0&&j>=0&&j<q.length)[q[i],q[j]]=[q[j],q[i]];}
       else fail(422,'Unsupported queue action.');l.queues[u.id]=q;
     }
-    else if(action==='chat') { requireThat(clean(b.text,500),'Write a message.','text'); l.chat.push({id:id(),userId:u.id,name:u.name,text:clean(b.text,500),at:now()});l.chat=l.chat.slice(-100); }
+    else if(action==='chat') { requireThat(l.status!=='paused','Chat is unavailable while the draft is paused.');requireThat(clean(b.text,500),'Write a message.','text'); l.chat.push({id:id(),userId:u.id,name:u.name,text:clean(b.text,500),at:now(),origin:l.status==='live'||b.origin==='draft'?'draft':'discussion'});l.chat=l.chat.slice(-100); }
     else if(action==='leave') {requireThat(l.owner!==u.id,'Transfer the commissioner role before leaving.');requireThat(l.status==='scheduled','Managers cannot leave after a draft has started.');l.members=l.members.filter(m=>m.id!==u.id);delete l.queues[u.id];activity(l,u.id,'Left the league.');}
     else {
       commissioner(l,u.id);
@@ -214,7 +215,7 @@ function api(req,res,pathname,b,u) {
         if(b.status==='live') {
           requireThat(['scheduled','paused'].includes(l.status),'Only scheduled or paused drafts can start.');requireThat(l.members.length===l.capacity,'Fill every manager slot before starting.');
           if(l.status==='scheduled'&&l.order==='random'){for(let i=l.members.length-1;i>0;i--){const j=crypto.randomInt(i+1);[l.members[i],l.members[j]]=[l.members[j],l.members[i]];}}
-          if(l.status==='scheduled')l.draftStartedAt=now();l.deadline=now()+(l.remaining ?? l.timer*1000);l.remaining=null;l.status='live';
+          const duration=l.remaining??l.timer*1000;if(l.status==='scheduled')l.draftStartedAt=now();l.remaining=null;l.status='live';l.deadline=now()+(l.sample&&current(l)?.id!==l.owner?crypto.randomInt(2,8)*1000:duration);
         } else if(b.status==='paused'){requireThat(l.status==='live','Only a live draft can pause.');l.remaining=Math.max(1000,l.deadline-now());l.deadline=null;l.status='paused';} else fail(422,'Unsupported draft state.');
         l.version++;activity(l,u.id,`${l.status==='live'?'Started/resumed':'Paused'} the draft.`);
       }

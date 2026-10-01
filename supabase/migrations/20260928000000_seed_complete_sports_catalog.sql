@@ -1,4 +1,4 @@
-Warning: truncated output (original token count: 44140)
+Warning: truncated output (original token count: 44383)
 Total output lines: 970
 
 -- Idempotent 2026 season competitor fields used by LOC drafts.
@@ -425,10 +425,7 @@ insert into loc_catalog_seed values
   ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'University of Alabama', true),
   ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'University of Alabama at Birmingham', true),
   ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'University of North Alabama', true),
-  ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'University of South Alabama', true),
-  ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'Arkansas State University', true),
-  ('ncaa_basketball', '2026-27 N…14140 tokens truncated…ketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'La Salle University', true),
-  ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'Lafayette College', true),
+  ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Sea…14383 tokens truncated…duled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'Lafayette College', true),
   ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'Lehigh University', true),
   ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'Mercyhurst University', true),
   ('ncaa_basketball', '2026-27 NCAA Division I Men''s Basketball Season', 2026, 'scheduled', 'https://www.ncaa.org/about-us/membership-directory/membership-composition-and-sport-sponsorship/', 'Pennsylvania State University', true),

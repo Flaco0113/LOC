@@ -1,5 +1,5 @@
 .roster-page{display:grid;gap:30px}
-.roster-managers{display:grid;gap:14px}
+.roster-managers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 .roster-manager{padding:0;overflow:hidden}
 .roster-manager-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border-bottom:1px solid var(--line)}
 .roster-manager-heading>div{display:flex;align-items:center;gap:12px;min-width:0}
@@ -8,6 +8,11 @@
 .roster-pick-scroll,.roster-matrix-scroll{overflow:auto;overscroll-behavior-x:contain;scrollbar-gutter:stable}
 .roster-picks{display:grid;grid-template-columns:repeat(var(--roster-sports),minmax(175px,1fr));min-width:max-content}
 .roster-pick{display:grid;grid-template-rows:auto 1fr auto auto;gap:11px;min-width:175px;padding:16px;border-right:1px solid var(--line)}
+.roster-manager-heading{padding:14px 16px}
+.roster-manager-heading>div{gap:8px}
+.roster-manager-heading .avatar{width:30px;height:30px;font-size:10px}
+.roster-manager-heading h2{font-size:14px}
+.roster-pick{gap:8px;min-width:150px;padding:12px}
 .roster-pick:last-child{border-right:0}
 .roster-sport{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:650}
 .roster-pick-contender{display:flex;align-items:center;gap:10px;min-width:0}
@@ -31,4 +36,7 @@
 .roster-matrix .roster-brand{width:32px;height:32px;font-size:9px}
 .roster-matrix tbody tr:last-child th,.roster-matrix tbody tr:last-child td{border-bottom:0}
 .roster-matrix tr>*:last-child{border-right:0}
+@media(max-width:900px){.roster-managers{grid-template-columns:1fr}}
+@media(min-width:901px){.roster-picks{grid-template-columns:repeat(2,minmax(0,1fr));min-width:0}.roster-pick{min-width:0;border-bottom:1px solid var(--line)}.roster-pick:nth-child(2n){border-right:0}}
 @media(max-width:760px){.roster-manager-heading{padding:14px}.roster-pick{padding:12px;min-width:155px}.roster-picks{grid-template-columns:repeat(var(--roster-sports),minmax(155px,1fr))}.roster-matrix-section{padding:16px}.roster-matrix th,.roster-matrix td{padding:10px;min-width:138px}.roster-matrix .roster-matrix-manager{min-width:145px}}
+

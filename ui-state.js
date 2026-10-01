@@ -89,6 +89,16 @@ export function setFieldError(form, name, message) {
 }
 
 export function syncDraftPanelSemantics(root, mobile) {
+  root.querySelectorAll('.draft-work-tabs [data-action="draft-tab"]').forEach(tab => {
+    const active=tab.dataset.tab===root.querySelector('.draft-page')?.dataset.draftTab;
+    tab.id=`draft-tab-${tab.dataset.tab}`;
+    tab.setAttribute('role','tab');
+    tab.setAttribute('aria-selected',String(active));
+    tab.setAttribute('aria-controls',`draft-panel-${tab.dataset.tab}`);
+    tab.setAttribute('aria-current',active?'page':'false');
+    tab.tabIndex=active?0:-1;
+  });
+  root.querySelector('.draft-work-tabs')?.setAttribute('role','tablist');
   root.querySelectorAll('[id^=draft-panel-]').forEach(panel => {
     if (mobile) {
       panel.setAttribute('role', 'tabpanel');
@@ -166,3 +176,4 @@ export function reconcile(container, html) {
   template.innerHTML = html;
   patchChildren(container, template.content);
 }
+

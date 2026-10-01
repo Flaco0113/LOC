@@ -19,7 +19,7 @@ export function productAction(l,u,action,b,ctx){
     const pool=teams(l).filter(t=>!l.picks.some(p=>p.team.id===t.id||(p.userId===u.id&&p.team.sport===t.sport))).map(t=>t.id);
     l.queues[u.id]=(l.queues[u.id]||[]).filter(t=>pool.includes(t));return {};
   }
-  if(!['editions','scores','finalize','reopen','archive','renew','announcement','poll','closepoll','contenders'].includes(action))return null;
+  if(!['editions','scores','finalize','reopen','archive','renew','announcement','poll','closepoll','deletepoll','contenders'].includes(action))return null;
   commissioner(l,u.id);
   if(action==='editions'){
     check(l.status==='scheduled','Competition editions lock when drafting begins.');
@@ -37,6 +37,7 @@ export function productAction(l,u,action,b,ctx){
   if(action==='announcement'){check(clean(b.text,1000).length>0,'Write an announcement.','text');l.announcements.unshift({id:id(),at:Date.now(),name:u.name,text:clean(b.text,1000)});l.announcements=l.announcements.slice(0,30);activity(l,u.id,'Posted a league announcement.');return {};}
   if(action==='poll'){const options=String(b.options||'').split('\n').map(x=>clean(x)).filter(Boolean);check(clean(b.question).length>=3&&options.length>=2&&options.length<=8,'Enter a question and 2–8 options.');l.polls.unshift({id:id(),question:clean(b.question),options,votes:{},closed:false});l.polls=l.polls.slice(0,10);return {};}
   if(action==='closepoll'){const p=l.polls.find(p=>p.id===b.pollId);check(p,'Poll unavailable.');p.closed=true;return {};}
+  if(action==='deletepoll'){const index=l.polls.findIndex(p=>p.id===b.pollId);check(index>=0,'Poll unavailable.');l.polls.splice(index,1);activity(l,u.id,'Deleted a league poll.');return {};}
   if(action==='scores'){
     check(l.competitionState==='active','Reopen this season before correcting scores.');check(l.status==='complete','Complete the draft before recording results.');
     check(Number(b.revision)===l.scoreRevision,'Scores changed. Reload the results and preview again.','revision');
@@ -62,3 +63,4 @@ export function productAction(l,u,action,b,ctx){
     activity(next,u.id,`Created next season from ${l.name}. Managers must be invited and accept again.`);return {createdId:next.id};
   }
 }
+
