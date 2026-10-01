@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { teamBrand } from '../team-brand.js';
+import { catalog } from '../catalog.js';
 
 test('draft contender marks use standard professional team abbreviations', () => {
   assert.equal(teamBrand({ name:'New York Knicks', sport:'NBA' }).initials, 'NYK');
@@ -22,6 +23,16 @@ test('Masters contenders use initials from the golfer name and retain special te
   assert.equal(golfer.initials, 'SS');
   assert.equal(teamBrand({ name:'Rory McIlroy', sport:'Masters Tournament' }).initials, 'RM');
   assert.equal(teamBrand({ name:'New York Knicks', sport:'NBA' }).background, '#006BB6');
-  assert.equal(teamBrand({ name:'Duke', sport:'NCAA Basketball' }).accent, '#FFFFFF');
+  assert.equal(teamBrand({ name:'Duke', sport:'NCAA Basketball' }).background, '#00539B');
+  assert.equal(teamBrand({ name:'North Carolina', sport:'NCAA Basketball' }).background, '#7BAFD4');
+  assert.equal(teamBrand({ name:'North Carolina', sport:'NCAA Basketball' }).foreground, '#08111f');
 });
 
+test('every NBA, NFL, MLB, and NHL catalog team has its own mapped team palette', () => {
+  for (const sport of ['NBA','NFL','MLB','NHL']) {
+    for (const name of catalog[sport]) {
+      const brand=teamBrand({ name, sport });
+      assert.notEqual(brand.background, '#20364e', `${sport} ${name} should not use the generic palette`);
+    }
+  }
+});

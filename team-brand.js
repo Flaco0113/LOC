@@ -28,16 +28,39 @@ const racingAbbreviations = {
 
 const colorOverrides = {
   'new york knicks': { background:'#006BB6', accent:'#F58426' },
-  'duke': { background:'#003087', accent:'#FFFFFF' },
-  'duke university': { background:'#003087', accent:'#FFFFFF' },
-  'duke blue devils': { background:'#003087', accent:'#FFFFFF' },
-  'north carolina': { background:'#56A0D3', accent:'#FFFFFF' },
-  'north carolina tar heels': { background:'#56A0D3', accent:'#FFFFFF' }
+  'duke': { background:'#00539B', accent:'#FFFFFF' },
+  'duke university': { background:'#00539B', accent:'#FFFFFF' },
+  'duke blue devils': { background:'#00539B', accent:'#FFFFFF' },
+  'north carolina': { background:'#7BAFD4', accent:'#FFFFFF' },
+  'north carolina tar heels': { background:'#7BAFD4', accent:'#FFFFFF' }
+};
+
+const leagueColors = {
+  NBA: {
+    ATL:['#E03A3E','#C1D32F'],BOS:['#007A33','#BA9653'],BKN:['#000000','#FFFFFF'],CHA:['#1D1160','#00788C'],CHI:['#CE1141','#000000'],CLE:['#860038','#FDBB30'],DAL:['#00538C','#B8C4CA'],DEN:['#0E2240','#FEC524'],DET:['#C8102E','#1D42BA'],GSW:['#1D428A','#FFC72C'],HOU:['#CE1141','#000000'],IND:['#002D62','#FDBB30'],LAC:['#C8102E','#1D428A'],LAL:['#552583','#FDB927'],MEM:['#5D76A9','#12173F'],MIA:['#98002E','#F9A01B'],MIL:['#00471B','#EEE1C6'],MIN:['#0C2340','#236192'],NOP:['#0C2340','#C8102E'],NYK:['#006BB6','#F58426'],OKC:['#007AC1','#EF3B24'],ORL:['#0077C0','#C4CED4'],PHI:['#006BB6','#ED174C'],PHX:['#1D1160','#E56020'],POR:['#E03A3E','#000000'],SAC:['#5A2D81','#63727A'],SAS:['#C4CED4','#000000'],TOR:['#CE1141','#000000'],UTA:['#002B5C','#F9A01B'],WAS:['#002B5C','#E31837']
+  },
+  NFL: {
+    ARI:['#97233F','#000000'],ATL:['#A71930','#000000'],BAL:['#241773','#9E7C0C'],BUF:['#00338D','#C60C30'],CAR:['#0085CA','#101820'],CHI:['#0B162A','#C83803'],CIN:['#FB4F14','#000000'],CLE:['#311D00','#FF3C00'],DAL:['#003594','#869397'],DEN:['#FB4F14','#002244'],DET:['#0076B6','#B0B7BC'],GB:['#203731','#FFB612'],HOU:['#03202F','#A71930'],IND:['#002C5F','#A2AAAD'],JAX:['#006778','#D7A22A'],KC:['#E31837','#FFB81C'],LV:['#000000','#A5ACAF'],LAC:['#0080C6','#FFC20E'],LAR:['#003594','#FFA300'],MIA:['#008E97','#FC4C02'],MIN:['#4F2683','#FFC62F'],NE:['#002244','#C60C30'],NO:['#D3BC8D','#101820'],NYG:['#0B2265','#A71930'],NYJ:['#125740','#FFFFFF'],PHI:['#004C54','#A5ACAF'],PIT:['#FFB612','#101820'],SF:['#AA0000','#B3995D'],SEA:['#002244','#69BE28'],TB:['#D50A0A','#34302B'],TEN:['#0C2340','#4B92DB'],WAS:['#5A1414','#FFB612']
+  },
+  MLB: {
+    AZ:['#A71930','#30CED8'],ATH:['#003831','#EFB21E'],ATL:['#CE1141','#13274F'],BAL:['#DF4601','#000000'],BOS:['#BD3039','#0C2340'],CHC:['#0E3386','#CC3433'],CWS:['#27251F','#C4CED4'],CIN:['#C6011F','#000000'],CLE:['#E31937','#0C2340'],COL:['#333366','#C4CED4'],DET:['#0C2340','#FA4616'],HOU:['#002D62','#EB6E1F'],KC:['#004687','#BD9B60'],LAA:['#BA0021','#003263'],LAD:['#005A9C','#EF3E42'],MIA:['#00A3E0','#EF3340'],MIL:['#12284B','#FFC52F'],MIN:['#002B5C','#D31145'],NYM:['#002D72','#FF5910'],NYY:['#0C2340','#C4CED4'],PHI:['#E81828','#284898'],PIT:['#FDB827','#27251F'],SD:['#2F241D','#FFC425'],SF:['#FD5A1E','#27251F'],SEA:['#0C2C56','#005C5C'],STL:['#C41E3A','#0C2340'],TB:['#092C5C','#8FBCE6'],TEX:['#003278','#C0111F'],TOR:['#134A8E','#1D2D5C'],WSH:['#AB0003','#14225A']
+  },
+  NHL: {
+    ANA:['#F47A38','#B9975B'],BOS:['#FFB81C','#000000'],BUF:['#003087','#FCB514'],CGY:['#C8102E','#F1BE48'],CAR:['#CC0000','#000000'],CHI:['#CF0A2C','#000000'],COL:['#6F263D','#236192'],CBJ:['#002654','#CE1126'],DAL:['#006847','#8F8F8C'],DET:['#CE1126','#FFFFFF'],EDM:['#041E42','#FF4C00'],FLA:['#C8102E','#041E42'],LAK:['#A2AAAD','#000000'],MIN:['#154734','#A6192E'],MTL:['#AF1E2D','#192168'],NSH:['#FFB81C','#041E42'],NJD:['#CE1126','#000000'],NYI:['#00539B','#F47D30'],NYR:['#0038A8','#CE1126'],OTT:['#C52032','#C2912C'],PHI:['#F74902','#000000'],PIT:['#FCB514','#000000'],SJS:['#006D75','#EA7200'],SEA:['#001628','#99D9D9'],STL:['#002F87','#FCB514'],TBL:['#002868','#FFFFFF'],TOR:['#00205B','#FFFFFF'],UTA:['#6C1D45','#71AFE5'],VAN:['#00205B','#00843D'],VGK:['#B4975A','#333F48'],WSH:['#041E42','#C8102E'],WPG:['#041E42','#004C97']
+  },
+  NCAA: {
+    DUK:['#003087','#FFFFFF'],UNC:['#56A0D3','#FFFFFF'],UCLA:['#2D68C4','#F2A900'],USC:['#990000','#FFC72C'],LSU:['#461D7C','#FDD023'],OSU:['#BB0000','#666666'],MSU:['#18453B','#FFFFFF'],PSU:['#041E42','#FFFFFF'],TEX:['#BF5700','#FFFFFF'],UVA:['#E57200','#232D4B'],ND:['#0C2340','#C99700'],BAMA:['#9E1B32','#FFFFFF'],UGA:['#BA0C2F','#000000'],UF:['#0021A5','#FA4616'],ORE:['#154733','#FEE123'],WASH:['#4B2E83','#B7A57A'],WISC:['#C5050C','#FFFFFF'],UK:['#0033A0','#FFFFFF'],KU:['#0051BA','#E8000D'],LOU:['#AD0000','#000000'],TENN:['#FF8200','#FFFFFF'],ARK:['#9D2235','#FFFFFF'],OU:['#841617','#FDF9D8'],NEB:['#E41C38','#FFFFFF'],ILL:['#13294B','#E84A27'],MICH:['#00274C','#FFCB05'],COLO:['#CFB87C','#000000'],ARIZ:['#CC0033','#003366'],UTAH:['#CC0000','#FFFFFF'],PITT:['#003594','#FFB81C'],MIZ:['#F1B82D','#000000'],CIN:['#E00122','#000000'],HOU:['#C8102E','#FFFFFF'],UCF:['#000000','#BA9B37'],NCSU:['#CC0000','#FFFFFF'],OKST:['#FF7300','#000000'],ISU:['#C8102E','#F1BE48'],KSU:['#512888','#D1D1D1'],MSST:['#660000','#FFFFFF'],FSU:['#782F40','#CEB888'],GT:['#B3A369','#003057'],VT:['#630031','#CF4420'],TAMU:['#500000','#FFFFFF'],BYU:['#002E5D','#FFFFFF'],BAY:['#154734','#FFB81C'],WAKE:['#9E7E38','#000000'],NOVA:['#00205B','#FFFFFF'],GONZ:['#002967','#C8102E'],MARQ:['#003366','#FFCC00'],CREI:['#005CA9','#FFFFFF'],XAV:['#0C2340','#9EA2A2'],HALL:['#004488','#FFFFFF'],PROV:['#000000','#A77BCA'],SJU:['#D22630','#FFFFFF'],DAY:['#CE1141','#004B8D'],WVU:['#EAAA00','#002855'],TCU:['#4D1979','#A3A9AC'],SMU:['#0033A0','#C8102E'],SDSU:['#C41230','#000000'],UNLV:['#CF0A2C','#666666'],CAL:['#003262','#FDB515'],RUTG:['#CC0033','#5F6A72'],SYR:['#F76900','#000E54'],TEM:['#9D2235','#FFFFFF'],UCONN:['#000E2F','#FFFFFF']
+  }
 };
 
 function initials(name, max = 3) {
   const words = name.match(/[\p{L}\p{N}]+/gu) || [];
   return words.slice(0, max).map(word => word[0]).join('').toUpperCase();
+}
+
+function foregroundFor(background) {
+  const channels = background.slice(1).match(/../g).map(hex => parseInt(hex,16)/255).map(value => value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4);
+  return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722>0.179?'#08111f':'#FFFFFF';
 }
 
 function collegeCode(name) {
@@ -55,7 +78,7 @@ export function teamBrand(team) {
     || (sport === 'NASCAR' ? racingAbbreviations[name] : null)
     || (sport === 'Masters Tournament' ? initials(name, 3) : null)
     || initials(name);
-  const colors = colorOverrides[name.toLowerCase()] || { background:'#20364e', accent:'#6c89a9' };
-  return { initials:abbreviation, background:colors.background, accent:colors.accent };
+  const palette = leagueColors[sport]?.[abbreviation] || leagueColors[sport === 'NCAA Football' || sport === 'NCAA Basketball' ? 'NCAA' : sport]?.[abbreviation];
+  const colors = colorOverrides[name.toLowerCase()] || (palette ? { background:palette[0], accent:palette[1] } : { background:'#20364e', accent:'#6c89a9' });
+  return { initials:abbreviation, background:colors.background, accent:colors.accent, foreground:foregroundFor(colors.background) };
 }
-
