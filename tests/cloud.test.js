@@ -16,6 +16,9 @@ test('Hosted accounts, durable cookies, join codes, permissions, capacity and co
   const s=setup(),owner=await s.signup();assert.match(owner.headers.get('set-cookie'),/Secure/);assert.match(owner.headers.get('set-cookie'),/HttpOnly/);
   const create=await s.call('/api/leagues',{name:'Friends championship',capacity:4,season:2026,sports:['NBA'],timer:30},owner.cookie),id=create.data.createdId;
   s.conflict();const generated=await s.call(`/api/leagues/${id}/joincode`,{action:'generate'},owner.cookie);assert.equal(generated.status,200);const code=generated.data.leagues[0].joinAccess.code;
+  assert.match(code,/^[A-HJ-NP-Z2-9]{6}$/);
+  const renamed=await s.call(`/api/leagues/${id}/teamname`,{name:'The Champions'},owner.cookie);assert.equal(renamed.data.leagues[0].members[0].name,'The Champions');
+  const profile=await s.call('/api/account',{firstName:'First',lastName:'Last',zone:'UTC'},owner.cookie);assert.equal(profile.data.user.name,'First Last');assert.equal(profile.data.user.firstName,'First');assert.equal(profile.data.user.notifications,true);assert.equal(profile.data.leagues[0].members[0].name,'The Champions');
   const guests=await Promise.all(Array.from({length:4},()=>s.signup()));
   const joins=await Promise.all(guests.map(g=>s.call('/api/join',{code},g.cookie)));
   assert.equal(joins.filter(r=>r.status===200).length,3);assert.equal(joins.filter(r=>r.status===422).length,1);
@@ -28,6 +31,7 @@ test('Hosted accounts, durable cookies, join codes, permissions, capacity and co
   await s.call(`/api/leagues/${id}/joincode`,{action:'revoke'},owner.cookie);
   assert.equal((await s.call('/api/join',{code},guest.cookie)).status,422);
   const renewed=await s.call(`/api/leagues/${id}/joincode`,{action:'generate'},owner.cookie),newCode=renewed.data.leagues[0].joinAccess.code;
+  assert.match(newCode,/^[A-HJ-NP-Z2-9]{6}$/);
   assert.notEqual(newCode,code);
   const state=s.row().state;assert.notEqual(state.users[0].password,'valid long password');
   assert.ok(!JSON.stringify(generated.data).includes(state.users[0].password));
@@ -43,6 +47,16 @@ test('Hosted requests reject cross-origin writes, oversized bodies, and rate-lim
   s.store.limit=async()=>false;assert.equal((await s.call('/api/auth/login',{})).status,429);
 });
 
+test('Draft sports and available teams are alphabetized without changing catalog IDs',async()=>{
+  const s=setup(),owner=await s.signup();
+  const created=await s.call('/api/leagues',{name:'Alphabetical draft',capacity:4,season:2026,sports:['NHL','NBA'],timer:30},owner.cookie);
+  const league=created.data.leagues[0];
+  assert.deepEqual(league.sports,['NBA','NHL']);
+  assert.deepEqual(league.teams.map(team=>team.name),[...league.teams.map(team=>team.name)].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})));
+  assert.ok(league.teams.some(team=>team.id==='NBA:0'));
+  assert.deepEqual(created.data.sports,[...created.data.sports].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})));
+});
+
 test('Hosted clock catches up all elapsed turns after every browser disconnects',async()=>{
   const s=setup(),owner=await s.signup();
   const made=await s.call('/api/leagues',{name:'Clock test',capacity:4,season:2026,sports:['NBA'],timer:30},owner.cookie),id=made.data.createdId;
@@ -53,3 +67,4 @@ test('Hosted clock catches up all elapsed turns after every browser disconnects'
   const result=await s.call('/api/state',null,owner.cookie);
   assert.equal(result.data.leagues[0].status,'complete');assert.equal(result.data.leagues[0].picks.length,4);
 });
+

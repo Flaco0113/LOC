@@ -62,7 +62,7 @@ test('Local account → league → invitation → fair draft → results → per
   await t.test('Creation retry is idempotent; preferences survive restart',async()=>{
     const data={name:'Retry Cup',season:2026,capacity:4,sports:['NBA'],timer:60,requestId:'repeatable-operation'};
     const a=await outsider.call('/api/leagues',data),b=await outsider.call('/api/leagues',data);assert.equal(a.createdId,b.createdId);assert.equal(b.leagues.length,1);
-    await outsider.call('/api/account',{name:'Updated Manager',zone:'Europe/London',notifications:false});await stop();await start();const r=await outsider.call('/api/state');assert.equal(r.user.name,'Updated Manager');assert.equal(r.user.zone,'Europe/London');assert.equal(r.user.notifications,false);assert.equal(r.leagues.length,1);
+    await outsider.call('/api/account',{name:'Updated Manager',zone:'Europe/London',notifications:false});await stop();await start();const r=await outsider.call('/api/state');assert.equal(r.user.name,'Updated Manager');assert.equal(r.user.firstName,'Updated');assert.equal(r.user.lastName,'Manager');assert.equal(r.user.zone,'Europe/London');assert.equal(r.user.notifications,true);assert.equal(r.leagues.length,1);
   });
   await t.test('Recovery rotates code and sessions; password whitespace is retained',async()=>{
     const a=client(),b=client();const r=await a.call('/api/auth/signup',{name:'Recovery Test',email:'recovery@test.local',password:' spaced passphrase ',zone:'UTC'});
@@ -73,3 +73,4 @@ test('Local account → league → invitation → fair draft → results → per
     await b.call('/api/auth/login',{email:'recovery@test.local',password:'replacement passphrase'});
   });
 });
+

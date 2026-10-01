@@ -4,7 +4,7 @@ import {ensureProductState,scoreValue} from './product-model.js';
 import {productAction,recordScore} from './product-server.js';
 import crypto from 'node:crypto';
 import {Buffer} from 'node:buffer';
-import {catalog} from './catalog.js';
+import {catalog, inactiveCatalogEntries} from './catalog.js';
 import {enqueueMail,deliverMail} from './mail.js';
 
 // One isolated kernel per hosted transaction; the local server retains its kernel.
@@ -16,6 +16,7 @@ const fail = (status, message, field) => { throw Object.assign(new Error(message
 const requireThat = (condition, message, field) => { if (!condition) fail(422, message, field); };
 const clean = (v, max = 120) => String(v ?? '').trim().slice(0, max);
 const email = v => clean(v).toLowerCase();
+const alphabetical = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
 const hash = v => crypto.createHash('sha256').update(v).digest('hex');
 function passwordHash(password, salt = crypto.randomBytes(16).toString('hex')) { return `${salt}:${crypto.scryptSync(password, salt, 64).toString('hex')}`; }
 function passwordMatch(password, stored) { if (!stored) return false; const [salt] = stored.split(':'); return crypto.timingSafeEqual(Buffer.from(passwordHash(password, salt)), Buffer.from(stored)); }
@@ -25,12 +26,12 @@ function transaction(fn) {
   const before = structuredClone(db);
   try { const result = fn(); persist(); if(result && 'revision' in result)result.revision=db.revision; return result; } catch (error) { db = before; throw error; }
 }
-function publicUser(u) { return { id: u.id, name: u.name, email: u.email, zone: u.zone, sample: !!u.sample, notifications: u.notifications !== false, verified: !!u.verified, pendingEmail:u.pendingEmail||null }; }
+function publicUser(u) { const parts=u.firstName||u.lastName?{firstName:u.firstName||'',lastName:u.lastName||''}:{firstName:(u.name||'').trim().split(/\s+/)[0]||'',lastName:(u.name||'').trim().split(/\s+/).slice(1).join(' ')}; return { id: u.id, name: u.name, ...parts, email: u.email, zone: u.zone, sample: !!u.sample, notifications: true, verified: !!u.verified, pendingEmail:u.pendingEmail||null }; }
 function member(l, uid) { return l.members.some(m => m.id === uid); }
 function leagueFor(uid, lid) { const l = db.leagues.find(l => l.id === lid && member(l, uid)); if (!l) fail(404, 'League unavailable. It may have been removed or your membership changed.'); return l; }
 function commissioner(l, uid) { if (l.owner !== uid) fail(403, 'Only the commissioner can make this change.'); }
 function activity(l, uid, text) { l.activity.unshift({ id: id(), at: now(), actor: db.users.find(u => u.id === uid)?.name || 'Draft clock', text }); l.updated = now(); }
-function teams(l) { return (l.extraTeams || []).concat(l.sports.flatMap(sport => catalog[sport].map((name, rank) => ({ id: `${sport}:${rank}`, name, sport, rank: rank + 1 })))); }
+function teams(l) { return (l.extraTeams || []).concat(l.sports.flatMap(sport => catalog[sport].map((name, rank) => ({ id: `${sport}:${rank}`, name, sport, rank: rank + 1 })).filter(team => !inactiveCatalogEntries[sport]?.has(team.name)))).sort((a,b) => alphabetical(a.name,b.name) || alphabetical(a.sport,b.sport)); }
 function current(l) { const n = l.members.length, i = l.picks.length, round = Math.floor(i / n); return l.members[round % 2 ? n - 1 - i % n : i % n]; }
 function eligible(l, uid) { return teams(l).filter(t => !l.picks.some(p => p.team.id === t.id || (p.userId === uid && p.team.sport === t.sport))); }
 function pick(l, uid, teamId, expected, overrideReason) {
@@ -68,9 +69,9 @@ function standings(l) {
   const rows = l.members.map(m => { const picks = l.picks.filter(p => p.userId === m.id); return { ...m, total: picks.reduce((s,p) => s + points(p), 0), drafted: picks.length }; }).sort((a,b) => b.total-a.total || a.name.localeCompare(b.name));
   rows.forEach((r,i) => r.rank = i && r.total === rows[i-1].total ? rows[i-1].rank : i+1); return rows;
 }
-function leagueView(l, uid) { ensureProductState(l); return { ...l, joinAccess:l.owner===uid?l.joinAccess:undefined, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
+function leagueView(l, uid) { ensureProductState(l); return { ...l, sports:[...l.sports].sort(alphabetical), joinAccess:l.owner===uid?l.joinAccess:undefined, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
 function snapshot(u) {
-  return { deployment:hosted?'public':'local', emailMode:mailConfig.mode, emailStatus:u?(db.mail||[]).filter(m=>m.userId===u.id).slice(-1).map(m=>({status:m.status,error:m.error||null}))[0]||null:null, user: u ? publicUser(u) : null, revision: db.revision, serverTime: now(), sports: Object.keys(catalog), leagues: u ? db.leagues.filter(l => member(l,u.id)).map(l => leagueView(l,u.id)) : [], invitations: u ? db.invites.filter(i => i.email === u.email).map(i => ({ ...i, league: db.leagues.find(l => l.id === i.leagueId) && ((l) => ({ name: l.name, sports: l.sports, season: l.season, capacity: l.capacity, joined: l.members.length, scheduled: l.scheduled, owner: l.members.find(m => m.id === l.owner)?.name }))(db.leagues.find(l => l.id === i.leagueId)) })) : [] };
+  return { deployment:hosted?'public':'local', emailMode:mailConfig.mode, emailStatus:u?(db.mail||[]).filter(m=>m.userId===u.id).slice(-1).map(m=>({status:m.status,error:m.error||null}))[0]||null:null, user: u ? publicUser(u) : null, revision: db.revision, serverTime: now(), sports: Object.keys(catalog).sort(alphabetical), leagues: u ? db.leagues.filter(l => member(l,u.id)).map(l => leagueView(l,u.id)) : [], invitations: u ? db.invites.filter(i => i.email === u.email).map(i => ({ ...i, league: db.leagues.find(l => l.id === i.leagueId) && ((l) => ({ name: l.name, sports: [...l.sports].sort(alphabetical), season: l.season, capacity: l.capacity, joined: l.members.length, scheduled: l.scheduled, owner: l.members.find(m => m.id === l.owner)?.name }))(db.leagues.find(l => l.id === i.leagueId)) })) : [] };
 }
 function newLeague(u, b) {
   requireThat(clean(b.name).length >= 3, 'Enter a league name with at least 3 characters.', 'name');
@@ -133,7 +134,7 @@ function api(req,res,pathname,b,u) {
     requireThat(clean(b.name).length>=2,'Enter your name.','name'); requireThat(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email(b.email)),'Enter a valid email address.','email');
     requireThat(!db.users.some(u=>u.email===email(b.email)),'An account already uses this email. Sign in instead.','email'); passwordValid(b.password);
     try{new Intl.DateTimeFormat('en',{timeZone:b.zone||'America/New_York'});}catch{fail(422,'Choose a valid time zone.','zone');} const recovery=crypto.randomBytes(18).toString('hex'); u={id:id(),name:clean(b.name),email:email(b.email),password:passwordHash(b.password),recovery:hash(recovery),zone:clean(b.zone)||'America/New_York',notifications:true};
-    db.users.push(u); if(mailConfig.enabled)emailToken(u,'verify'); session(res,u,!!b.remember); return {...snapshot(u), recovery};
+    u.firstName=clean(b.firstName)||clean(b.name).split(/\s+/)[0];u.lastName=clean(b.lastName)||clean(b.name).split(/\s+/).slice(1).join(' ');db.users.push(u); if(mailConfig.enabled)emailToken(u,'verify'); session(res,u,!!b.remember); return {...snapshot(u), recovery};
   }); }
   if(pathname==='/api/auth/login') { rateLimit(req); const found=db.users.find(x=>!x.sample&&x.email===email(b.email)); if(!found || !passwordMatch(typeof b.password==='string'?b.password:'',found.password)) fail(401,'Email or password is incorrect.'); return transaction(()=>{session(res,found,!!b.remember);return snapshot(found);}); }
   if(pathname==='/api/auth/reset') { rateLimit(req); return transaction(()=>{ const found=db.users.find(x=>!x.sample&&x.email===email(b.email)); if(!found||found.recovery!==hash(clean(b.recovery))) fail(422,'Email or recovery code is incorrect.','recovery'); passwordValid(b.password); found.password=passwordHash(b.password); const recovery=crypto.randomBytes(18).toString('hex'); found.recovery=hash(recovery); Object.keys(db.sessions).forEach(k=>{if(db.sessions[k].userId===found.id)delete db.sessions[k];}); session(res,found,false); return {...snapshot(found),recovery}; }); }
@@ -156,7 +157,7 @@ function api(req,res,pathname,b,u) {
   if(pathname==='/api/account/resend'){rateLimit(req);requireMail();return transaction(()=>{requireThat(!u.sample,'Create a personal account first.');emailToken(u,'verify',u.pendingEmail||u.email);return snapshot(u);});}
 
   if(pathname==='/api/auth/logout') return transaction(()=>{ const token=(req.headers.cookie||'').split('; ').find(c=>c.startsWith('loc_session='))?.slice(12); if(token)delete db.sessions[hash(token)];res.setHeader('Set-Cookie','loc_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'+(hosted?'; Secure':''));return snapshot(null); });
-  if(pathname==='/api/account') return transaction(()=>{ requireThat(clean(b.name).length>=2,'Enter your name.','name'); try{new Intl.DateTimeFormat('en',{timeZone:b.zone});}catch{fail(422,'Choose a valid time zone.','zone');} u.name=clean(b.name);u.zone=b.zone;u.notifications=!!b.notifications;db.leagues.forEach(l=>l.members.forEach(m=>{if(m.id===u.id)m.name=u.name;}));return snapshot(u); });
+  if(pathname==='/api/account') return transaction(()=>{ const legacy=clean(b.name),parts=legacy.split(/\s+/),firstName=clean(b.firstName)||parts[0]||'',lastName=clean(b.lastName)||(parts.length>1?parts.slice(1).join(' '):u.lastName||'');requireThat(firstName.length>=1,'Enter your first name.','firstName');requireThat(lastName.length>=1,'Enter your last name.','lastName'); try{new Intl.DateTimeFormat('en',{timeZone:b.zone});}catch{fail(422,'Choose a valid time zone.','zone');}const previousName=u.name;u.firstName=firstName;u.lastName=lastName;u.name=`${firstName} ${lastName}`.trim();u.zone=b.zone;u.notifications=true;db.leagues.forEach(l=>l.members.forEach(m=>{if(m.id===u.id&&m.name===previousName)m.name=u.name;}));return snapshot(u); });
   if(pathname==='/api/account/password') return transaction(()=>{requireThat(!u.sample,'Sample accounts do not have passwords.');requireThat(passwordMatch(b.currentPassword||'',u.password),'Current password is incorrect.','currentPassword');passwordValid(b.password);u.password=passwordHash(b.password);Object.keys(db.sessions).forEach(k=>{if(db.sessions[k].userId===u.id)delete db.sessions[k];});session(res,u,false);return snapshot(u);});
   if(pathname==='/api/leagues') return transaction(()=>{const existing=b.requestId&&db.leagues.find(l=>l.owner===u.id&&l.requestId===b.requestId);const l=existing||newLeague(u,b);if(b.requestId)l.requestId=clean(b.requestId);return {...snapshot(u),createdId:l.id};});
   if(pathname==='/api/invitations') return transaction(()=>{
@@ -167,6 +168,7 @@ function api(req,res,pathname,b,u) {
   const match=pathname.match(/^\/api\/leagues\/([^/]+)\/(\w+)$/);if(!match)fail(404,'Not found.');
   return transaction(()=>{
     const l=ensureProductState(leagueFor(u.id,match[1])), action=match[2];
+    if(action==='teamname'){const name=clean(b.name,48);requireThat(name.length>=2,'Use at least 2 characters for your league team name.','name');const own=l.members.find(m=>m.id===u.id);own.name=name;return snapshot(u);}
     const experience=experienceAction(l,u,action,b,{requireThat,clean,id,activity});
     if(experience!==null)return {...snapshot(u),...experience};
     const product=productAction(l,u,action,b,{requireThat,commissioner,activity,clean,id,newLeague,teams});
@@ -190,7 +192,7 @@ function api(req,res,pathname,b,u) {
         if(b.action==='revoke')delete l.joinAccess;
         else {
           requireThat(l.status==='scheduled'&&!l.locked&&l.competitionState==='active','Unlock a forming league before generating a code.');
-          l.joinAccess={code:crypto.randomBytes(8).toString('hex').toUpperCase(),expires:now()+7*86400000};
+          const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code;do{code=Array.from({length:6},()=>alphabet[crypto.randomInt(alphabet.length)]).join('');}while(db.leagues.some(x=>x.joinAccess?.code===code&&x.joinAccess.expires>now()));l.joinAccess={code,expires:now()+7*86400000};
         }
         activity(l,u.id,b.action==='revoke'?'Revoked the league join code.':'Generated a join code valid for seven days. Previous code revoked.');
       }
@@ -238,3 +240,4 @@ return {api, readSession, advanceClocks, flushMail, getState:()=>db, exportLeagu
  return {format,content:format==='recap'?recap(l):'Recorded,Revision,Manager ID,Points,Rank\r\n'+rows.map(r=>r.join(',')).join('\r\n')};
 }};
 }
+
