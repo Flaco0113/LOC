@@ -1,6 +1,13 @@
 // Only non-sensitive navigation preferences are stored here.
 export const filterDefaults = { poolSearch: '', poolSport: '', poolAll: false, pickSearch: '', pickSport: '', pickRound: '', sort: 'rank', sortAsc: true };
 
+export function unreadDraftMessages(previous, next, userId) {
+  if (!previous || !next) return [];
+  const known = new Set((previous.chat || []).map(message => message.id));
+  return (next.chat || []).filter(message => message.origin === 'draft' &&
+    message.userId !== userId && !known.has(message.id));
+}
+
 // Month-end planning allowances, not actual fixture dates. Deliberately stable:
 // opening the app next year must not silently move an existing league's season.
 export const championshipMonths = { NBA: 6, NFL: 2, MLB: 11, NHL: 6,

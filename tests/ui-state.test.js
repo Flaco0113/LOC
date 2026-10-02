@@ -1,6 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { picksUntilTurn, overrideTeams, scoreExplanation, leagueTimeframe } from '../ui-state.js';
+import { picksUntilTurn, overrideTeams, scoreExplanation, leagueTimeframe, unreadDraftMessages, filterDefaults } from '../ui-state.js';
+
+test('Draft chat unread helper counts only new incoming draft messages', () => {
+  const previous = { chat: [{ id: 'old', userId: 'friend', origin: 'draft' }] };
+  const next = { chat: [
+    ...previous.chat,
+    { id: 'incoming', userId: 'friend', origin: 'draft' },
+    { id: 'own', userId: 'me', origin: 'draft' },
+    { id: 'discussion', userId: 'friend', origin: 'discussion' }
+  ] };
+  assert.deepEqual(unreadDraftMessages(previous, next, 'me').map(message => message.id), ['incoming']);
+  assert.deepEqual(unreadDraftMessages(null, next, 'me'), []);
+  assert.equal(filterDefaults.poolAll, false);
+});
 
 test('Override search includes the whole undrafted catalog and explains filled slots', () => {
   const teams = Array.from({ length: 80 }, (_,i) => ({ id: String(i), name: `Team ${i}`, sport: i < 40 ? 'NBA' : 'NFL' }));
