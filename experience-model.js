@@ -20,3 +20,14 @@ export function personalizedFeed(l,uid,now=Date.now()){
 }
 export function historyRows(l){const reset=l.activity?.find(a=>a.text.startsWith('Reset draft and cleared'))?.at||0;return (l.scoreHistory||[]).filter(x=>x.at>reset);}
 
+export function seasonHighlights(l){
+ const rows=l.finalStandings||projectedStandings(l),leader=rows[0];
+ return {champions:rows.filter(r=>r.total===leader?.total).map(r=>r.name),
+   margin:rows.length>1?rows[0].total-rows[1].total:null,final:['final','archived'].includes(l.competitionState)};
+}
+export function recapCard(l){
+ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+ const rows=l.finalStandings||projectedStandings(l),height=230+rows.length*44;
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="${height}" viewBox="0 0 900 ${height}"><rect width="900" height="${height}" rx="24" fill="#0d1828"/><g font-family="Arial,sans-serif" fill="#eef4ff"><text x="40" y="48" font-size="18" fill="#ffa05b">LOC · ${l.sample?'FICTIONAL SAMPLE · ':''}${seasonHighlights(l).final?'FINAL RESULTS':'PROVISIONAL RESULTS'}</text><text x="40" y="98" font-size="26">${escape(l.name.slice(0,48))}</text><text x="40" y="132" font-size="16">${escape(l.seasonLabel||l.season)} · ${escape(l.rulesVersion||'LOC placement v1')}</text>${rows.map((r,i)=>`<text x="40" y="${184+i*44}" font-size="22">#${r.rank} ${escape(r.name.slice(0,40))}</text><text x="850" y="${184+i*44}" text-anchor="end" font-size="22">${r.total} pts</text>`).join('')}<text x="40" y="${height-24}" font-size="15" fill="#b6c4d8">Commissioner-entered results · No live data · loc-one.vercel.app</text></g></svg>`;
+}
+

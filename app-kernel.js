@@ -92,7 +92,20 @@ function createSample() {
   const l = newLeague(u, { name:'Founders Cup', season:2026, capacity:4, sports:['NBA','NFL','MLB','NHL'], timer:60 });
   l.members.push(...rivals.map(r => ({id:r.id,name:r.name}))); l.status='live';
   while(l.status !== 'complete') { const turn=current(l), team=eligible(l,turn.id)[0]; pick(l,turn.id,team.id,l.version); }
-  l.picks.forEach((p,i) => p.finish=(i*3)%8+1); activity(l,u.id,'Loaded illustrative sample results. These are not live sports scores.');
+
+  // Seed only brand-new isolated demos; never invent history in existing leagues.
+  l.picks.forEach((p,i)=>{if(i%4!==0){p.finish=(i*3)%8+1;recordScore(l,p,0,'Fictional demo result — not a real sports outcome',u,{id});}});
+  l.scoreLedger.forEach((x,i)=>x.at=now()-(i+1)*3600000);
+  l.scoreHistory.forEach((x,i)=>x.at=now()-(l.scoreHistory.length-i)*3600000);
+  l.scoreUpdatedAt=l.scoreLedger[0]?.at;
+  l.announcements=[{id:id(),at:now(),name:u.name,text:'Welcome to this fictional sample. Inspect rosters, follow the score ledger, then try a what-if finish.'}];
+  l.polls=[{id:id(),question:'Fictional sample poll: which championship are you following?',options:['Basketball','Football','Baseball','Hockey'],votes:{[rivals[0].id]:0,[rivals[1].id]:1},closed:false}];
+  l.articles=[{id:id(),title:'How to prepare a balanced queue',body:'Fictional sample guide: review your open sport slots, watch several eligible contenders for each sport, and order your queue by your own preferences. LOC chooses the first eligible queued contender at timeout. Catalog order is illustrative; it is not a performance forecast.',authorId:u.id,authorName:u.name,sport:'',status:'published',featured:true,updated:now()}];
+  l.chat=[{id:id(),name:rivals[0].name,userId:rivals[0].id,at:now(),origin:'discussion',text:'Sample message: the what-if tool shows how a championship could change our standings.'}];
+  const prior=structuredClone(l);prior.id=id();prior.name='Founders Cup · Opening edition';prior.seasonLabel='2026 · Opening edition';prior.competitionState='archived';prior.scoreLedger=[];prior.scoreHistory=[];prior.scoreRevision=0;
+  prior.picks.forEach((p,i)=>{p.id=id();p.finish=(i*3)%8+1;});prior.finalStandings=standings(prior);prior.finalizedAt=now()-86400000;prior.finalizationReason='Fictional archived sample; these are not real results.';
+  prior.chat=[];prior.polls=[];prior.announcements=[];prior.renewedId=l.id;l.previousLeagueId=prior.id;db.leagues.push(prior);
+  activity(l,u.id,'Loaded fictional sample results and linked archive. These are not live sports scores.');
   const prep = newLeague(u,{name:'Sunday Club',season:2026,capacity:4,sports:['NBA','NFL','MLB','NHL'],timer:60,scheduled:new Date(now()+86400000).toISOString()});
   prep.members.push(...rivals.map(r => ({id:r.id,name:r.name})));
   const inv = newLeague(rivals[0],{name:'Global Trophy',season:2026,capacity:4,sports:['UEFA Champions League','NASCAR','Masters Tournament'],timer:60});
@@ -143,6 +156,14 @@ function api(req,res,pathname,b,u) {
   if(pathname==='/api/auth/verify'){rateLimit(req);return transaction(()=>{const t=consumeEmailToken(b.token,'verify'),found=db.users.find(x=>x.id===t.userId);requireThat(found,'Account unavailable.');requireThat(!db.users.some(x=>x.id!==found.id&&x.email===t.email),'That email is already in use.');found.email=t.email;found.verified=true;delete found.pendingEmail;return {...snapshot(u),message:'Email verified. You can now accept invitations.'};});}
   if(pathname==='/api/auth/reset-link'){rateLimit(req);return transaction(()=>{passwordValid(b.password);const t=consumeEmailToken(b.token,'reset'),found=db.users.find(x=>x.id===t.userId);requireThat(found&&found.email===t.email,'This link no longer matches your account. Request a new one.');found.password=passwordHash(b.password);const recovery=crypto.randomBytes(18).toString('hex');found.recovery=hash(recovery);Object.keys(db.sessions).forEach(k=>{if(db.sessions[k].userId===found.id)delete db.sessions[k];});session(res,found,false);return {...snapshot(found),recovery};});}
   auth(u);
+  if(pathname==='/api/join/preview') {
+    rateLimit(req);requireThat(!u.sample,'Create a personal account to join a shared league.');
+    const code=clean(b.code,64).replace(/[\s-]/g,'').toUpperCase();
+    const l=db.leagues.find(l=>l.joinAccess?.code===code&&l.joinAccess.expires>now());
+    requireThat(l&&!l.sample,'This code is invalid or expired. Ask the commissioner for a new code.','code');
+    requireThat(member(l,u.id)||(l.status==='scheduled'&&!l.locked&&l.competitionState==='active'&&l.members.length<l.capacity),'This league is not accepting managers.','code');
+    return {...snapshot(u),joinPreview:{name:l.name,season:l.seasonLabel||String(l.season),owner:l.members.find(m=>m.id===l.owner)?.name,sports:l.sports,joined:l.members.length,capacity:l.capacity,scheduled:l.scheduled}};
+  }
   if(pathname==='/api/join') { rateLimit(req); return transaction(()=>{
     requireThat(!u.sample,'Create a personal account to join a shared league.');
     const code=clean(b.code,64).replace(/[\s-]/g,'').toUpperCase();

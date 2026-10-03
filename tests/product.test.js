@@ -15,9 +15,12 @@ test('Local championship tools persist, enforce permissions, isolate notes and l
  await other.call('/api/auth/signup',{name:'Other manager',email:'other@qa.local',password:'a long test passphrase'});
  await other.call(url('research'),{teamId:l.teams[0].id,note:'No access'},404);
  await owner.call(url('research'),{teamId:l.teams[0].id,note:'Private research',watched:true});
+ const historyBefore=l.scoreHistory.length;
  await owner.call(url('scores'),{revision:l.scoreRevision,results:[{pickId:l.picks[0].id,finish:1}],reason:'Commissioner source reviewed'});
  await owner.call(url('scores'),{revision:l.scoreRevision,results:[{pickId:l.picks[0].id,finish:2}],reason:'Stale result attempt'},422);
- l=(await owner.call('/api/state')).leagues.find(x=>x.id===lid);assert.equal(l.scoreLedger[0].newPoints,12);assert.equal(l.scoreHistory.length,1);
+ l=(await owner.call('/api/state')).leagues.find(x=>x.id===lid);assert.equal(l.scoreLedger[0].newPoints,12);assert.equal(l.scoreHistory.length,historyBefore+1);
+ await owner.call(url('finalize'),{confirmed:true,reason:'Pending outcomes must prevent finalization'},422);
+ await owner.call(url('scores'),{revision:l.scoreRevision,results:l.picks.filter(p=>p.finish==null).map(p=>({pickId:p.id,finish:3})),reason:'Finish remaining fictional results'});
  await owner.call(url('announcement'),{text:'Welcome to the final round'});await owner.call(url('poll'),{question:'Next sport?',options:'NBA\nNFL'});
  l=(await owner.call('/api/state')).leagues.find(x=>x.id===lid);await owner.call(url('vote'),{pollId:l.polls[0].id,option:1});
  await owner.call(url('finalize'),{confirmed:false,reason:'All final results reviewed'},422);

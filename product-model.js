@@ -15,7 +15,7 @@ export function ensureProductState(l) {
 export function seasonPhase(l) {
   if(l.competitionState==='archived')return 'Archived';if(l.competitionState==='final')return 'Final';
   if(l.status==='scheduled')return 'Forming';if(l.status!=='complete')return 'Drafting';
-  return l.picks.length&&l.picks.every(p=>p.finish!=null||p.override!=null)?'Awaiting confirmation':'In season';
+  return l.picks.length&&l.picks.every(p=>p.finish!=null||p.override!=null)?'Results awaiting commissioner confirmation':'Results in progress';
 }
 export function queueReason(l,userId,teamId) {
   const t=l.teams.find(t=>t.id===teamId);if(!t)return 'No longer in catalog';

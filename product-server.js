@@ -7,6 +7,13 @@ export function recordScore(l,p,old,reason,u,ctx){
 export function productAction(l,u,action,b,ctx){
   const {requireThat:check,commissioner,activity,clean,id,newLeague,teams}=ctx;
   ensureProductState(l);
+  if(action==='queuewatched'){
+    check(['scheduled','live'].includes(l.status),'The queue is unavailable while paused or after drafting.');
+    check(Array.isArray(b.teamIds)&&b.teamIds.length>0&&b.teamIds.length<=500,'Select at least one watched contender.');
+    const pool=teams(l).filter(t=>!l.picks.some(p=>p.team.id===t.id||(p.userId===u.id&&p.team.sport===t.sport)));
+    check(b.teamIds.every(id=>typeof id==='string'&&l.research[u.id]?.[id]?.watched&&pool.some(t=>t.id===id)),'A selected contender is no longer watched or eligible. Review the list again.');
+    l.queues[u.id]=[...new Set([...(l.queues[u.id]||[]),...b.teamIds])];return {};
+  }
   if(action==='research'){
     check(teams(l).some(t=>t.id===b.teamId),'Choose a contender in this league.');
     const mine=l.research[u.id] ||= {};mine[b.teamId]={note:clean(b.note,500),watched:!!b.watched};return {};

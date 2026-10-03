@@ -36,7 +36,7 @@ const server=http.createServer(async(req,res)=>{
       const b=req.method==='POST'?await body(req):{};advanceClocks();const result=api(req,res,url.pathname,b,readSession(req));res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;
     }
     if(req.method!=='GET')fail(405,'Method not supported.');
-    const allowed=['/experience-model.js','/experience-ui.js','/product-model.js','/product-ui.js','/ui-state.js','/script.js','/styles.css','/favicon.svg']; let file;
+    const allowed=['/roster.css','/team-brand.js','/roadmap-model.js','/roadmap-ui.js','/experience-model.js','/experience-ui.js','/product-model.js','/product-ui.js','/ui-state.js','/script.js','/styles.css','/favicon.svg']; let file;
     if(allowed.includes(url.pathname))file=path.join(root,url.pathname.slice(1));
     else if(url.pathname==='/assets/loc-hero.png')file=path.join(root,'assets','loc-hero.png');
     else if(!path.extname(url.pathname)||url.pathname==='/index.html')file=path.join(root,'index.html');
