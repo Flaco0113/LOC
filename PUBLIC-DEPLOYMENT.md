@@ -16,10 +16,11 @@
 - All storage RPCs are invoker functions executable only by `service_role`.
   Private tables have RLS and no client policies intentionally: browser database
   access is denied. The Edge API checks sessions, membership and commissioner roles.
-- Signup works without verification emails. Email-address-based invites are
-  disabled publicly while mail is deferred; possession of a commissioner-created
-  join code authorizes joining. Codes have 64 bits of random entropy, last seven
-  days, can be revoked/replaced, and never bypass locked/full/started leagues.
+- Signup works without verification emails unless Resend is configured. In email
+  mode, signup queues a verification link and email-address invitations require a
+  verified account. Without email mode, a commissioner-created join code authorizes
+  joining. Codes have 64 bits of random entropy, last seven days, can be revoked,
+  and never bypass locked/full/started leagues.
 - Original points and bonuses are unchanged. Results and catalog data remain
   illustrative/manual; external AI, live data and email are still deferred.
 
@@ -38,6 +39,22 @@ The hosted API accepts writes from `https://loc-one.vercel.app`,
 custom hostname to use the same app and saved accounts. Update the allowed
 origins in `cloud-handler.js` if the production domains change.
 Apply the two public workspace migrations once before deploying the API.
+
+### Optional transactional email (Resend)
+
+The Supabase Edge Function reads `LOC_EMAIL_MODE`, `RESEND_API_KEY`,
+`LOC_EMAIL_FROM`, and `LOC_PUBLIC_URL` from its server-side secrets. Configure
+`LOC_EMAIL_MODE=resend`, a Resend API key, a sender address on a Resend-verified
+domain (for example `LOC <noreply@theloc.org>`), and
+`LOC_PUBLIC_URL=https://www.theloc.org`. Store these as Supabase Edge Function
+secrets; never commit the API key or put it in Vercel/browser environment
+variables. If email mode is omitted, the join-code flow remains active.
+
+After a successful write, `loc-api` drains queued messages and records provider
+acceptance or failure using compare-and-swap. Resend idempotency keys protect
+retries if delivery succeeded but the state save conflicted. Deploy the shared
+`mail.js`, `app-kernel.js`, `cloud-handler.js`, and function entrypoint together.
+Verify the sender domain in Resend before enabling email mode.
 
 ## Draft timing and data recovery
 

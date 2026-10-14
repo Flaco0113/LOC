@@ -1,8 +1,15 @@
 import {cloudHandler} from '../../../cloud-handler.js';
+import {mailConfiguration} from '../../../mail.js';
 
 const key=JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}').default || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const root=Deno.env.get('SUPABASE_URL');
 if(!key||!root)throw new Error('Database credentials are not configured.');
+const mailConfig=mailConfiguration({
+  LOC_EMAIL_MODE:Deno.env.get('LOC_EMAIL_MODE')||'disabled',
+  RESEND_API_KEY:Deno.env.get('RESEND_API_KEY')||'',
+  LOC_EMAIL_FROM:Deno.env.get('LOC_EMAIL_FROM')||'',
+  LOC_PUBLIC_URL:Deno.env.get('LOC_PUBLIC_URL')||'https://www.theloc.org'
+});
 async function rpc(name:string,body:object={}) {
   const headers:Record<string,string>={apikey:key,'Content-Type':'application/json'};
   if(!key.startsWith('sb_secret_'))headers.Authorization=`Bearer ${key}`;
@@ -16,4 +23,4 @@ Deno.serve(cloudHandler({
   load:()=>rpc('loc_load_state'),
   save:(expected:number,value:unknown)=>rpc('loc_save_state',{expected,value}),
   limit:(bucket:string,ceiling:number)=>rpc('loc_rate_limit',{bucket,ceiling})
-}));
+},{mailConfig}));
