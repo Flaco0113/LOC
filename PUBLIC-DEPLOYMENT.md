@@ -33,7 +33,10 @@ server model, catalog, mail adapter or cloud handler changes. Include:
 `product-server.js`, `catalog.js`, `mail.js`, retaining relative paths.
 The function uses Supabase's server-provided secret key environment variables.
 JWT verification is disabled specifically because LOC implements custom sessions.
-The production origin is pinned in `cloud-handler.js`; update it for a domain move.
+The hosted API accepts writes from `https://loc-one.vercel.app`,
+`https://theloc.org` and `https://www.theloc.org`, allowing either Vercel or
+custom hostname to use the same app and saved accounts. Update the allowed
+origins in `cloud-handler.js` if the production domains change.
 Apply the two public workspace migrations once before deploying the API.
 
 ## Draft timing and data recovery
@@ -65,3 +68,4 @@ concurrent joins/capacity, private code visibility, revocation/expiry, CAS retri
 cross-origin/body/rate-limit rejection, and disconnected draft catch-up.
 Record final public-browser verification separately; tests with fake storage do
 not by themselves verify Vercel routing or actual database persistence.
+

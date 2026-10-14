@@ -2,7 +2,7 @@ import {createKernel} from './app-kernel.js';
 import crypto from 'node:crypto';
 
 // Storage is injected so CAS conflicts and authorization can be tested without a cloud account.
-export function cloudHandler(store, {origin='https://loc-one.vercel.app'}={}) {
+export function cloudHandler(store, {origins=['https://loc-one.vercel.app','https://theloc.org','https://www.theloc.org']}={}) {
   return async request => {
     const headers=new Headers({'Content-Type':'application/json','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});
     const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
@@ -11,7 +11,7 @@ export function cloudHandler(store, {origin='https://loc-one.vercel.app'}={}) {
       url.pathname=url.pathname.replace(/^\/(?:functions\/v1\/)?loc-api(?=\/)/,'');
       if(!url.pathname.startsWith('/api/'))return json({error:'Not found.'},404);
       if(!['GET','POST'].includes(request.method))return json({error:'Method not supported.'},405);
-      if(request.method==='POST'&&request.headers.get('origin')!==origin)return json({error:'Cross-origin request rejected.'},403);
+      if(request.method==='POST'&&!origins.includes(request.headers.get('origin')))return json({error:'Cross-origin request rejected.'},403);
       if(request.method==='POST'&&!request.headers.get('content-type')?.startsWith('application/json'))return json({error:'Use a JSON request.'},415);
       let body={};
       if(request.method==='POST') {
@@ -54,3 +54,4 @@ export function cloudHandler(store, {origin='https://loc-one.vercel.app'}={}) {
     }
   };
 }
+

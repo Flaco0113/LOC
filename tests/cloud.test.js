@@ -47,6 +47,17 @@ test('Hosted requests reject cross-origin writes, oversized bodies, and rate-lim
   s.store.limit=async()=>false;assert.equal((await s.call('/api/auth/login',{})).status,429);
 });
 
+test('Hosted writes accept the custom production domain origin',async()=>{
+  for(const host of ['theloc.org','www.theloc.org']) {
+    let saved;
+    const store={load:async()=>({version:0,state:{users:[],sessions:{},leagues:[],invites:[],revision:0}}),limit:async()=>true,save:async(_version,value)=>{saved=value;return true;}};
+    const handler=cloudHandler(store);
+    const response=await handler(new Request(`https://${host}/api/auth/signup`,{method:'POST',headers:{origin:`https://${host}`,'content-type':'application/json'},body:JSON.stringify({name:'Custom Domain',email:`${host}@example.test`,password:'valid long password'})}));
+    assert.equal(response.status,200,host);
+    assert.equal(saved.users[0].email,`${host}@example.test`);
+  }
+});
+
 test('Draft sports and available teams are alphabetized without changing catalog IDs',async()=>{
   const s=setup(),owner=await s.signup();
   const created=await s.call('/api/leagues',{name:'Alphabetical draft',capacity:4,season:2026,sports:['NHL','NBA'],timer:30},owner.cookie);
@@ -67,4 +78,5 @@ test('Hosted clock catches up all elapsed turns after every browser disconnects'
   const result=await s.call('/api/state',null,owner.cookie);
   assert.equal(result.data.leagues[0].status,'complete');assert.equal(result.data.leagues[0].picks.length,4);
 });
+
 
