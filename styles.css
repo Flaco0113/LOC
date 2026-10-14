@@ -92,3 +92,5 @@ body{font-size:16px}.small,.field-help,.ledger-row small{font-size:14px;line-hei
 
 .share-card svg{width:100%;height:auto;margin:18px 0}.sport-result-heading{background:#19314d}.discussion-brief{margin-bottom:24px}
 @media(max-width:760px){.draft-page[data-draft-tab=available] #draft-workspace #draft-panel-available,.draft-page[data-draft-tab=queue] #draft-workspace #draft-panel-queue{display:block}.draft-page .draft-work-tabs .nav-item{background:transparent}.draft-page .draft-work-tabs .nav-item[aria-current=page]{background:#19314d}}
+
+.password-input-wrap{position:relative;display:block;width:100%}.password-input-wrap>input{width:100%;padding-right:3.5rem!important}.password-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer}.password-toggle:hover{background:var(--raised);color:var(--text)}.password-toggle:focus-visible{outline:3px solid var(--focus);outline-offset:0}.password-toggle .icon{width:19px;height:19px}
