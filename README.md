@@ -4,7 +4,7 @@ League of Champions is a multi-sport fantasy league concept where managers draft
 
 ## Shared public beta
 
-[Open LOC](https://loc-one.vercel.app/). Create a personal account and save its
+[Open LOC](https://www.theloc.org/). Create a personal account and save its
 recovery code. Create a league, then open **Settings → Generate join code**.
 Send the code or join link privately to friends; they create their own accounts
 and enter the code under **Invitations → Join with a league code**.
@@ -63,3 +63,4 @@ See `supabase/README.md` for deployment notes.
 ## Championship workspace enhancements
 
 See [CHAMPIONSHIP-IMPLEMENTATION.md](CHAMPIONSHIP-IMPLEMENTATION.md) for the September 2026 release: competition editions, season finalization, results previews and audit history, private research, discussion and polls, scenario scoring, archives and renewal. Current scoring is unchanged. Real email and live data remain deferred.
+
