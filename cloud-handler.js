@@ -2,7 +2,7 @@ import {createKernel} from './app-kernel.js';
 import crypto from 'node:crypto';
 
 // Storage is injected so CAS conflicts and authorization can be tested without a cloud account.
-export function cloudHandler(store, {origins=['https://loc-one.vercel.app','https://theloc.org','https://www.theloc.org']}={}) {
+export function cloudHandler(store, {origins=['https://loc-one.vercel.app','https://theloc.org','https://www.theloc.org'],mailConfig={mode:'disabled',enabled:false}}={}) {
   return async request => {
     const headers=new Headers({'Content-Type':'application/json','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});
     const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
@@ -32,7 +32,7 @@ export function cloudHandler(store, {origins=['https://loc-one.vercel.app','http
       for(let attempt=0;attempt<8;attempt++) {
         const row=await store.load();
         let dirty=false;
-        const kernel=createKernel(row.state,{hosted:true,save:()=>{dirty=true;}});
+        const kernel=createKernel(row.state,{hosted:true,save:()=>{dirty=true;},mailConfig});
         const req={method:request.method,headers:{cookie:request.headers.get('cookie')||''},socket:{remoteAddress:ip}};
         const pending=new Headers(headers);
         const res={setHeader:(key,value)=>pending.set(key,value)};
@@ -44,6 +44,8 @@ export function cloudHandler(store, {origins=['https://loc-one.vercel.app','http
         }catch(e){error=e;}
         if(dirty&&!await store.save(row.version,kernel.getState()))continue;
         if(error)throw error;
+        // Send only after durable commit; save provider status in a fresh CAS transaction.
+        if(request.method==='POST'&&mailConfig.enabled)await dispatchPendingMail(store,mailConfig);
         if(exported){pending.set('Content-Type',exported.format==='recap'?'text/plain; charset=utf-8':'text/csv; charset=utf-8');pending.set('Content-Disposition',`attachment; filename="LOC-${exported.format}.${exported.format==='recap'?'txt':'csv'}"`);return new Response(exported.content,{headers:pending});}
         return new Response(JSON.stringify(result),{headers:pending});
       }
@@ -55,3 +57,19 @@ export function cloudHandler(store, {origins=['https://loc-one.vercel.app','http
   };
 }
 
+
+async function dispatchPendingMail(store,mailConfig) {
+  for(let sent=0;sent<12;sent++) {
+    let committed=false;
+    for(let attempt=0;attempt<8;attempt++) {
+      const row=await store.load();
+      if(!(row.state.mail||[]).some(message=>message.status==='pending'))return;
+      let dirty=false;
+      const kernel=createKernel(row.state,{hosted:true,save:()=>{dirty=true;},mailConfig});
+      await kernel.flushMail();
+      if(!dirty)return;
+      if(await store.save(row.version,kernel.getState())){committed=true;break;}
+    }
+    if(!committed)return;
+  }
+}

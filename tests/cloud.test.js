@@ -58,6 +58,24 @@ test('Hosted writes accept the custom production domain origin',async()=>{
   }
 });
 
+test('Hosted Resend configuration dispatches queued verification mail after saving state',async()=>{
+  let row={version:0,state:{users:[],sessions:{},leagues:[],invites:[],revision:0}},sent=[];
+  const store={load:async()=>structuredClone(row),limit:async()=>true,save:async(expected,value)=>{if(expected!==row.version)return false;row={version:expected+1,state:structuredClone(value)};return true;}};
+  const originalFetch=globalThis.fetch;
+  globalThis.fetch=async(url,options)=>{sent.push({url,options});return new Response(JSON.stringify({id:'email_test_123'}),{status:200,headers:{'content-type':'application/json'}});};
+  try {
+    const handler=cloudHandler(store,{mailConfig:{mode:'resend',enabled:true,key:'re_test_key',from:'LOC <noreply@theloc.org>',baseUrl:'https://www.theloc.org'}});
+    const response=await handler(new Request('https://www.theloc.org/api/auth/signup',{method:'POST',headers:{origin:'https://www.theloc.org','content-type':'application/json'},body:JSON.stringify({name:'Email Test',email:'manager@example.test',password:'valid long password'})}));
+    assert.equal(response.status,200);
+    assert.equal(sent.length,1);
+    assert.equal(sent[0].url,'https://api.resend.com/emails');
+    assert.equal(sent[0].options.headers['Idempotency-Key'],row.state.mail[0].id);
+    assert.match(sent[0].options.body,/https:\/\/www\.theloc\.org\/#verify=/);
+    assert.equal(row.state.mail[0].status,'sent');
+    assert.equal(row.state.mail[0].text,undefined);
+  } finally { globalThis.fetch=originalFetch; }
+});
+
 test('Draft sports and available teams are alphabetized without changing catalog IDs',async()=>{
   const s=setup(),owner=await s.signup();
   const created=await s.call('/api/leagues',{name:'Alphabetical draft',capacity:4,season:2026,sports:['NHL','NBA'],timer:30},owner.cookie);
