@@ -922,3 +922,5 @@ export const inactiveCatalogEntries = {
   "UEFA Champions League": new Set(["Juventus", "Benfica"])
 };
 
+
+export function displayTeamName(team){if(team.sport!=='NCAA Football')return team.name;const base=team.name.trim().toLocaleLowerCase();const match=catalog['NCAA Basketball'].find(name=>name.toLocaleLowerCase().startsWith(base+' ')&&!/(?:university|college)/i.test(name));return match||team.name;}
