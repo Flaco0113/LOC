@@ -18,14 +18,30 @@ environment variables supplied by Supabase.
 
 ## Initial Administration
 
-After the first LOC owner creates and verifies their account, call:
+After deploying the migrations, create and verify the intended LOC owner account.
+Then, using a database-admin connection (not the browser client), add that
+account's UUID to the private bootstrap allowlist. For example, replace the
+email below with the verified owner's address:
+
+```sql
+insert into private.platform_admin_bootstrap_allowlist (user_id)
+select id
+from auth.users
+where lower(email) = lower('owner@example.com')
+  and email_confirmed_at is not null;
+```
+
+Confirm that exactly one row was inserted before asking that owner to call:
 
 ```js
 await supabase.rpc("bootstrap_first_admin");
 ```
 
-This succeeds exactly once. Further platform roles must be granted by an
-existing platform administrator.
+Only the allowlisted verified owner can bootstrap, and the database marks the
+allowlist entry consumed on success. The allowlist is in the private schema and
+cannot be edited through the browser API. Further platform roles must be
+granted by an existing platform administrator; bootstrap recovery requires a
+trusted database administrator.
 
 ## Frontend RPCs
 
