@@ -4,7 +4,7 @@ import {ensureProductState,scoreValue} from './product-model.js';
 import {productAction,recordScore} from './product-server.js';
 import crypto from 'node:crypto';
 import {Buffer} from 'node:buffer';
-import {catalog, inactiveCatalogEntries} from './catalog.js';
+import {catalog, inactiveCatalogEntries, displayTeamName} from './catalog.js';
 import {enqueueMail,deliverMail} from './mail.js';
 
 // One isolated kernel per hosted transaction; the local server retains its kernel.
@@ -69,7 +69,7 @@ function standings(l) {
   const rows = l.members.map(m => { const picks = l.picks.filter(p => p.userId === m.id); return { ...m, total: picks.reduce((s,p) => s + points(p), 0), drafted: picks.length }; }).sort((a,b) => b.total-a.total || a.name.localeCompare(b.name));
   rows.forEach((r,i) => r.rank = i && r.total === rows[i-1].total ? rows[i-1].rank : i+1); return rows;
 }
-function leagueView(l, uid) { ensureProductState(l); return { ...l, seasonLabel:l.seasonLabel||String(l.season), chat:(l.chat||[]).map(m=>({...m,origin:m.origin||(l.draftStartedAt&&m.at>=l.draftStartedAt?'draft':'discussion')})), sports:[...l.sports].sort(alphabetical), joinAccess:l.owner===uid?l.joinAccess:undefined, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, points: points(p) })) }; }
+function leagueView(l, uid) { ensureProductState(l); return { ...l, seasonLabel:l.seasonLabel||String(l.season), chat:(l.chat||[]).map(m=>({...m,origin:m.origin||(l.draftStartedAt&&m.at>=l.draftStartedAt?'draft':'discussion')})), sports:[...l.sports].sort(alphabetical), joinAccess:l.owner===uid?l.joinAccess:undefined, articles:(l.articles||[]).filter(x=>x.status==='published'||x.authorId===uid),alertPreferences:{[uid]:l.alertPreferences?.[uid]||{}}, research: {[uid]: l.research[uid] || {}}, polls:l.polls.map(({votes,...p})=>({...p,counts:p.options.map((_,i)=>Object.values(votes).filter(v=>v===i).length),myVote:votes[uid]??null})), outgoingInvitations:l.owner===uid?db.invites.filter(i=>i.leagueId===l.id).map(i=>({id:i.id,email:i.email,status:i.status,delivery:(db.mail||[]).filter(m=>m.inviteId===i.id).at(-1)?.status||'local'})):[], queues: { [uid]: l.queues[uid] || [] }, standings: standings(l), teams: teams(l).map(t=>({...t,name:displayTeamName(t)})), eligibleIds: eligible(l, uid).map(t => t.id), current: l.status === 'complete' ? null : current(l), commissioner: l.owner === uid, picks: l.picks.map(p => ({ ...p, team:{...p.team,name:displayTeamName(p.team)}, points: points(p) })) }; }
 function snapshot(u) {
   return { deployment:hosted?'public':'local', emailMode:mailConfig.mode, emailStatus:u?(db.mail||[]).filter(m=>m.userId===u.id).slice(-1).map(m=>({status:m.status,error:m.error||null}))[0]||null:null, user: u ? publicUser(u) : null, revision: db.revision, serverTime: now(), sports: Object.keys(catalog).sort(alphabetical), leagues: u ? db.leagues.filter(l => member(l,u.id)).map(l => leagueView(l,u.id)) : [], invitations: u ? db.invites.filter(i => i.email === u.email).map(i => ({ ...i, league: db.leagues.find(l => l.id === i.leagueId) && ((l) => ({ name: l.name, sports: [...l.sports].sort(alphabetical), season: l.season, capacity: l.capacity, joined: l.members.length, scheduled: l.scheduled, owner: l.members.find(m => m.id === l.owner)?.name }))(db.leagues.find(l => l.id === i.leagueId)) })) : [] };
 }
@@ -77,8 +77,8 @@ function newLeague(u, b) {
   requireThat(clean(b.name).length >= 3, 'Enter a league name with at least 3 characters.', 'name');
   requireThat(Number.isInteger(+b.capacity) && +b.capacity >= 2 && +b.capacity <= 20, 'Choose 2–20 managers.', 'capacity');
   requireThat(Array.isArray(b.sports) && b.sports.length && new Set(b.sports).size === b.sports.length && b.sports.every(s => catalog[s]), 'Select at least one supported sport.', 'sports');
-  const seasonLabel=clean(b.seasonLabel??b.season,20),seasonMatch=seasonLabel.match(/^(20\d{2}|2100)(?:-(20\d{2}|2101))?$/),season=Number(seasonMatch?.[1]);
-  requireThat(seasonMatch&&(!seasonMatch[2]||Number(seasonMatch[2])===season+1)&&season>=2026&&season<=2100,'Choose a season from 2026 to 2100.','seasonLabel');
+  const seasonLabel=clean(b.seasonLabel??b.season,20),seasonMatch=seasonLabel.match(/^(\d{4})(?:-(\d{4}))?$/),season=Number(seasonMatch?.[1]),seasonEnd=Number(seasonMatch?.[2]||seasonMatch?.[1]);
+  requireThat(seasonMatch&&season>=2026&&season<=9999&&seasonEnd>=season&&seasonEnd<=9999&&seasonEnd<=season+1,'Choose a valid season from 2026 onward.','seasonLabel');
   const scheduled = b.scheduled ? Date.parse(b.scheduled) : null;
   requireThat(!b.scheduled || (Number.isFinite(scheduled) && scheduled > now()), 'Choose a future draft date, or schedule later.', 'scheduled');
   requireThat([30,60,90,120].includes(+b.timer), 'Choose a valid pick timer.', 'timer');
@@ -159,7 +159,7 @@ function api(req,res,pathname,b,u) {
   if(pathname==='/api/join/preview') {
     rateLimit(req);requireThat(!u.sample,'Create a personal account to join a shared league.');
     const code=clean(b.code,64).replace(/[\s-]/g,'').toUpperCase();
-    const l=db.leagues.find(l=>l.joinAccess?.code===code&&l.joinAccess.expires>now());
+    const l=db.leagues.find(l=>l.joinAccess?.code===code&&(l.joinAccess.expires==null||l.joinAccess.expires>now()));
     requireThat(l&&!l.sample,'This code is invalid or expired. Ask the commissioner for a new code.','code');
     requireThat(member(l,u.id)||(l.status==='scheduled'&&!l.locked&&l.competitionState==='active'&&l.members.length<l.capacity),'This league is not accepting managers.','code');
     return {...snapshot(u),joinPreview:{name:l.name,season:l.seasonLabel||String(l.season),owner:l.members.find(m=>m.id===l.owner)?.name,sports:l.sports,joined:l.members.length,capacity:l.capacity,scheduled:l.scheduled}};
@@ -167,7 +167,7 @@ function api(req,res,pathname,b,u) {
   if(pathname==='/api/join') { rateLimit(req); return transaction(()=>{
     requireThat(!u.sample,'Create a personal account to join a shared league.');
     const code=clean(b.code,64).replace(/[\s-]/g,'').toUpperCase();
-    const l=db.leagues.find(l=>l.joinAccess?.code===code&&l.joinAccess.expires>now());
+    const l=db.leagues.find(l=>l.joinAccess?.code===code&&(l.joinAccess.expires==null||l.joinAccess.expires>now()));
     requireThat(l&&!l.sample,'This code is invalid or expired. Ask the commissioner for a new code.','code');
     if(member(l,u.id))return {...snapshot(u),joinedId:l.id};
     requireThat(l.status==='scheduled'&&!l.locked&&l.competitionState==='active','This league is not accepting managers.','code');
@@ -214,15 +214,16 @@ function api(req,res,pathname,b,u) {
         if(b.action==='revoke')delete l.joinAccess;
         else {
           requireThat(l.status==='scheduled'&&!l.locked&&l.competitionState==='active','Unlock a forming league before generating a code.');
-          const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code;do{code=Array.from({length:6},()=>alphabet[crypto.randomInt(alphabet.length)]).join('');}while(db.leagues.some(x=>x.joinAccess?.code===code&&x.joinAccess.expires>now()));l.joinAccess={code,expires:now()+7*86400000};
+          const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code;do{code=Array.from({length:6},()=>alphabet[crypto.randomInt(alphabet.length)]).join('');}while(db.leagues.some(x=>x.joinAccess?.code===code));l.joinAccess={code,expires:null};
         }
-        activity(l,u.id,b.action==='revoke'?'Revoked the league join code.':'Generated a join code valid for seven days. Previous code revoked.');
+        activity(l,u.id,b.action==='revoke'?'Revoked the league join code.':'Generated a reusable join code. Previous code revoked.');
       }
       else if(action==='settings') {requireThat(clean(b.name).length>=3,'Use at least 3 characters.','name');l.name=clean(b.name);l.description=clean(b.description,500);l.locked=!!b.locked;
         if(l.status==='scheduled'){requireThat([30,60,90,120].includes(+b.timer),'Choose a valid timer.','timer');const date=b.scheduled?Date.parse(b.scheduled):null;requireThat(!b.scheduled||(date>now()),'Choose a future date.','scheduled');l.timer=+b.timer;l.scheduled=date;l.order=b.order==='manual'?'manual':'random';}
         activity(l,u.id,'Updated league settings.');
       }
       else if(action==='order'){requireThat(l.status==='scheduled'&&l.order==='manual','Manual order can be set before the draft.');const i=l.members.findIndex(m=>m.id===b.memberId),j=i+(b.direction==='up'?-1:1);requireThat(i>=0&&j>=0&&j<l.members.length,'Cannot move this manager further.');[l.members[i],l.members[j]]=[l.members[j],l.members[i]];activity(l,u.id,'Updated the manual draft order.');}
+      else if(action==='deleteleague') {requireThat(clean(b.confirmName)===l.name,'Type the exact league name to confirm deletion.','confirmName');const ids=new Set(db.invites.filter(i=>i.leagueId===l.id).map(i=>i.id));db.leagues=db.leagues.filter(x=>x.id!==l.id);db.invites=db.invites.filter(i=>i.leagueId!==l.id);db.mail=(db.mail||[]).filter(m=>m.leagueId!==l.id&&!ids.has(m.inviteId));return snapshot(u);}
       else if(action==='retrymail') {requireMail();const message=(db.mail||[]).find(m=>m.inviteId===b.inviteId&&m.status==='failed'&&db.invites.some(i=>i.id===m.inviteId&&i.leagueId===l.id));requireThat(message,'No failed delivery to retry.');message.status='pending';delete message.error;}
       else if(action==='invite') {
         requireThat(!hosted||mailConfig.enabled,'Share a league join code from Settings. Email-address invitations require verified email delivery.');
