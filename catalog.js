@@ -923,4 +923,4 @@ export const inactiveCatalogEntries = {
 };
 
 
-export function displayTeamName(team){if(team.sport!=='NCAA Football')return team.name;const base=team.name.trim().toLocaleLowerCase();const match=catalog['NCAA Basketball'].find(name=>name.toLocaleLowerCase().startsWith(base+' ')&&!/(?:university|college)/i.test(name));return match||team.name;}
+export function displayTeamName(team){if(team.sport!=='NCAA Football')return team.name;const schoolKey=value=>value.toLocaleLowerCase().replace(/[.,'’()]/g,' ').replace(/\b(the|university|college|of|at|in)\b/g,' ').replace(/\s+/g,' ').trim();const key=schoolKey(team.name),matches=catalog['NCAA Basketball'].filter(name=>schoolKey(name)===key);return matches.length===1?matches[0]:team.name;}
