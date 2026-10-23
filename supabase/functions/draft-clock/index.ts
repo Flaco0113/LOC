@@ -4,6 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "no-referrer",
+  "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
 };
 
 Deno.serve(async (request: Request) => {
@@ -53,9 +58,11 @@ Deno.serve(async (request: Request) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
+    console.error("Draft clock request failed.", error instanceof Error ? error.name : "unknown error");
     return Response.json(
-      { error: error instanceof Error ? error.message : "Unexpected error" },
+      { error: "Unable to process the draft clock request." },
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
+
