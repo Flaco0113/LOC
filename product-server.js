@@ -31,7 +31,7 @@ export function productAction(l,u,action,b,ctx){
   if(action==='editions'){
     check(l.status==='scheduled','Competition editions lock when drafting begins.');
     check(Array.isArray(b.editions)&&b.editions.length===l.sports.length,'Review every included competition.');
-    const editions=l.sports.map(sport=>{const values=b.editions.filter(e=>e.sport===sport);check(values.length===1,'Each sport needs one edition.');const x=values[0];check(clean(x.name).length>=3,'Name every competition edition.');check(/^20\d{2}-(0[1-9]|1[0-2])$|^2100-(0[1-9]|1[0-2])$/.test(x.endMonth),'Use a valid championship month.');return {sport,name:clean(x.name),endMonth:x.endMonth,confirmed:!!x.confirmed};});
+    const editions=l.sports.map(sport=>{const values=b.editions.filter(e=>e.sport===sport);check(values.length===1,'Each sport needs one edition.');const x=values[0];check(clean(x.name).length>=3,'Name every competition edition.');check(/^\d{4}-(0[1-9]|1[0-2])$/.test(x.endMonth)&&Number(x.endMonth.slice(0,4))>=2026&&Number(x.endMonth.slice(0,4))<=9999,'Use a valid championship month from 2026 onward.');return {sport,name:clean(x.name),endMonth:x.endMonth,confirmed:!!x.confirmed};});
     l.editions=editions;activity(l,u.id,'Reviewed competition editions. Rules remain LOC placement v1.');return {};
   }
   if(action==='contenders'){
