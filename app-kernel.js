@@ -159,7 +159,7 @@ function api(req,res,pathname,b,u) {
   if(pathname==='/api/join/preview') {
     rateLimit(req);requireThat(!u.sample,'Create a personal account to join a shared league.');
     const code=clean(b.code,64).replace(/[\s-]/g,'').toUpperCase();
-    const l=db.leagues.find(l=>l.joinAccess?.code===code&&(l.joinAccess.expires==null||l.joinAccess.expires>now()));
+    const l=db.leagues.find(l=>l.joinAccess?.code===code);
     requireThat(l&&!l.sample,'This code is invalid or expired. Ask the commissioner for a new code.','code');
     requireThat(member(l,u.id)||(l.status==='scheduled'&&!l.locked&&l.competitionState==='active'&&l.members.length<l.capacity),'This league is not accepting managers.','code');
     return {...snapshot(u),joinPreview:{name:l.name,season:l.seasonLabel||String(l.season),owner:l.members.find(m=>m.id===l.owner)?.name,sports:l.sports,joined:l.members.length,capacity:l.capacity,scheduled:l.scheduled}};
@@ -167,7 +167,7 @@ function api(req,res,pathname,b,u) {
   if(pathname==='/api/join') { rateLimit(req); return transaction(()=>{
     requireThat(!u.sample,'Create a personal account to join a shared league.');
     const code=clean(b.code,64).replace(/[\s-]/g,'').toUpperCase();
-    const l=db.leagues.find(l=>l.joinAccess?.code===code&&(l.joinAccess.expires==null||l.joinAccess.expires>now()));
+    const l=db.leagues.find(l=>l.joinAccess?.code===code);
     requireThat(l&&!l.sample,'This code is invalid or expired. Ask the commissioner for a new code.','code');
     if(member(l,u.id))return {...snapshot(u),joinedId:l.id};
     requireThat(l.status==='scheduled'&&!l.locked&&l.competitionState==='active','This league is not accepting managers.','code');
